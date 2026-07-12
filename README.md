@@ -41,7 +41,7 @@ sudo apt install python3-gi gir1.2-webkit2-4.1 curl
 ## Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/arch-headlines.git
+git clone https://github.com/lifehack890-stack/arch-headlines.git
 cd arch-headlines
 chmod +x install.sh
 bash install.sh
