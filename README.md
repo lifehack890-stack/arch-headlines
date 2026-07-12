@@ -2,6 +2,7 @@
 
 A lightweight desktop widget for Arch Linux users — displays the latest news from [archlinux.org/news](https://archlinux.org/news/) as a scrolling ticker, with inline Arch Wiki search.
 
+![arch-headlines](arch-headlines.png)
 
 ## Features
 
@@ -27,14 +28,9 @@ Arch news items often require manual intervention before upgrading. Missing them
 - `gir1.2-webkit2-4.1` (WebKit2GTK 4.1)
 - `curl`
 
-### Arch / Manjaro
+### Arch / Manjaro / Bazzite
 ```bash
 sudo pacman -S python-gobject webkit2gtk-4.1 curl
-```
-
-### Bazzite / Fedora
-```bash
-sudo rpm-ostree install python3-gobject webkit2gtk4.1 curl
 ```
 
 ### Ubuntu / Zorin / Debian
@@ -45,7 +41,7 @@ sudo apt install python3-gi gir1.2-webkit2-4.1 curl
 ## Installation
 
 ```bash
-git clone https://github.com/lifehack890-stack/arch-headlines.git
+git clone https://github.com/YOUR_USERNAME/arch-headlines.git
 cd arch-headlines
 chmod +x install.sh
 bash install.sh

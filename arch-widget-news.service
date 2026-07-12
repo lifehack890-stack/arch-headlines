@@ -1,0 +1,8 @@
+[Unit]
+Description=Arch Linux News Fetcher (arch-widget)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/share/arch-widget/fetch-news.sh
