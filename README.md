@@ -28,7 +28,7 @@ Arch news items often require manual intervention before upgrading. Missing them
 - `gir1.2-webkit2-4.1` (WebKit2GTK 4.1)
 - `curl`
 
-### Arch / Manjaro / Bazzite
+### Arch / Manjaro
 ```bash
 sudo pacman -S python-gobject webkit2gtk-4.1 curl
 ```
