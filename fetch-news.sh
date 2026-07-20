@@ -53,6 +53,20 @@ html = re.sub(r'// __ARCH_NEWS_START__.*?// __ARCH_NEWS_END__\n', '', html, flag
 
 injection = "// __ARCH_NEWS_START__\nconst ARCH_NEWS_DATA = " + json.dumps(data, ensure_ascii=False) + ";\n// __ARCH_NEWS_END__\n"
 
+interceptor = '''
+// __INTERCEPT_START__
+document.addEventListener('click', function(e) {
+  const a = e.target.closest('a');
+  if (a && a.href && a.href.startsWith('http')) {
+    e.preventDefault();
+    document.title = 'open:' + a.href;
+    setTimeout(() => { document.title = 'expanded'; }, 500);
+  }
+}, true);
+// __INTERCEPT_END__
+'''
+html = re.sub(r'// __INTERCEPT_START__.*?// __INTERCEPT_END__\n', '', html, flags=re.DOTALL)
+html = html.replace('</script>', interceptor + '</script>', 1)
 html = html.replace('<script>\n', '<script>\n' + injection, 1)
 open('$HTML_FILE', 'w').write(html)
 print(f"injected {len(data['items'])} items into {repr('$HTML_FILE')}")
