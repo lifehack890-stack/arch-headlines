@@ -41,6 +41,7 @@ class ArchWidget(Gtk.Window):
         self.webview = WebKit2.WebView()
         self.webview.set_settings(settings)
         self.webview.connect("notify::title", self._on_title_change)
+        self.webview.connect("button-press-event", self._on_win_press)
         self.add(self.webview)
         self.show_all()
         run_fetch()
@@ -68,6 +69,16 @@ class ArchWidget(Gtk.Window):
         if title.startswith("open:"):
             url = title[5:]
             subprocess.Popen(["xdg-open", url])
+        elif title == "dragstart":
+            # Begin window move using X11 WM
+            display = self.get_display()
+            seat = display.get_default_seat()
+            device = seat.get_pointer()
+            self.begin_move_drag(
+                1,  # button 1 = left click
+                *device.get_position()[1:3],
+                Gtk.get_current_event_time()
+            )
         elif title == "expanded":
             self.resize(500, 700)
         elif title == "collapsed":
