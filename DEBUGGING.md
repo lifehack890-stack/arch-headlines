@@ -1,6 +1,6 @@
 # arch-headlines — Debug Log
 
-## Known Bugs & Status
+## Fixed Bugs
 
 ### [Fixed] v0.2 — Left click not opening links
 
@@ -11,56 +11,86 @@ causing left-click events to be intercepted by drag movement logic before reachi
 **Fix:**
 - Removed drag movement feature (`_on_press` / `_on_motion` deleted)
 - Left-click fully delegated to WebView
-- Links now intercepted via JS `document.addEventListener('click')` → `document.title = 'open:URL'` → Python calls `xdg-open`
+- Links intercepted via JS `document.addEventListener('click')` → `document.title = 'open:URL'` → Python calls `xdg-open`
 - Right-click quit menu retained at window level
 
-**Verified on:**
-- Zorin OS / X11 session (`GDK_BACKEND=x11`)
-- ThinkPad X260
+**Verified on:** Zorin OS / X11 session (`GDK_BACKEND=x11`) / ThinkPad X260
 
 ---
 
-### [Open] Window titlebar not hidden on Wayland
+### [Fixed] v0.3 — Right-click quit menu not appearing
 
 **Root cause:**
-On Wayland, window decorations are managed by the compositor, so `set_decorated(False)` has no effect.
+WebKit's default context menu was intercepting right-click before the GTK window handler.
 
-**Workaround:**
-Force X11 backend with `GDK_BACKEND=x11`.
-
-**Proposed fix:**
-- Port to GTK4 + libadwaita (native Wayland support)
-- Or use Wayland protocol hints directly
+**Fix:**
+- Connected `button-press-event` to both GTK window and WebView
+- Right-click anywhere on widget now shows "Quit arch-headlines" menu
 
 ---
 
-### [Open] Drag to reposition widget
+### [Fixed] v0.3 — Widget could not be repositioned
 
 **Root cause:**
-Right-click drag conflicted with WebKit's context menu handler.
-`WebKit2.ContextMenuItem.new_with_custom_menu_item` is not available in WebKit2GTK 4.1,
-causing the app to crash silently on startup when included.
+No drag implementation existed after removing the conflicting drag logic in v0.2.
 
-**Proposed fix:**
-- Implement drag on a thin GTK overlay header outside the WebView
-- Or use `GDK_BACKEND=x11` + `begin_move_drag()`
-
----
-
-### [By design] Transparent background
-
-WebView background blends with the desktop wallpaper due to GTK `set_app_paintable(True)` + Cairo transparency.
-This is intentional — the widget is designed to sit on top of the wallpaper.
+**Fix:**
+- Header `mousedown` → `document.title = 'dragstart'` → Python calls `begin_move_drag()`
+- 5px threshold: under 5px = click (expand/collapse), over 5px = drag (reposition)
+- Left-click links unaffected
 
 ---
 
-## Debug Procedure (Wayland vs X11)
+### [Fixed] v0.3 — Titlebar visible on Wayland
 
-1. Log out of Zorin
-2. At the login screen, click the gear icon and select **"Zorin Desktop on Xorg"**
-3. Log in and launch without `GDK_BACKEND=x11`
-4. Verify behavior
-5. Switch back to Wayland session and compare with `GDK_BACKEND=x11`
+**Root cause:**
+`set_decorated(False)` has no effect on some Wayland compositors.
+
+**Fix:**
+Resolved without GTK4 port — titlebar no longer appears in current build.
+`GDK_BACKEND=x11` still required for launch.
+
+---
+
+## Open Bugs
+
+### [Open] EN/JA toggle causes widget to collapse
+
+Switching language while widget is expanded causes it to collapse unexpectedly.
+
+**Suspected cause:**
+Re-render during language switch triggers a `document.title` change that Python
+interprets as `'collapsed'`.
+
+**Debug steps:**
+```bash
+GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1
+```
+Expand widget, switch EN/JA, check `title:` output in terminal.
+
+---
+
+### [Open] Background not following widget on collapse
+
+Glassmorphism/transparent background does not resize correctly when widget collapses.
+
+**Suspected cause:**
+GTK window resize and WebView repaint are not synchronized.
+
+---
+
+### [Open] Glassmorphism effect (compositor-dependent)
+
+True `backdrop-filter: blur()` requires compositor support:
+- GNOME → Blur my Shell extension
+- KDE → KWin Rules/scripts
+- Hyprland → `decoration:blur` in config
+- Sway → not supported
+
+Current workaround: semi-transparent dark background via CSS.
+True blur requires per-compositor implementation or GTK4 port.
+
+---
 
 ## Launch Commands
 
@@ -84,8 +114,10 @@ systemctl --user status arch-widget-news.timer
 
 ## Roadmap
 
-- [ ] Fix titlebar on Wayland (GTK4 port)
-- [ ] Restore drag-to-move (non-conflicting implementation)
-- [ ] Glassmorphism / Aero style (backdrop-filter via compositor)
+- [ ] Fix EN/JA toggle collapse bug
+- [ ] Fix background tracking on collapse
+- [ ] Glassmorphism (compositor-agnostic solution)
+- [ ] Drag-to-reposition polish
 - [ ] Flatpak packaging
 - [ ] AUR package
+- [ ] GTK4 port (Wayland native)
