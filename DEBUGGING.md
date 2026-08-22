@@ -90,7 +90,19 @@ True `backdrop-filter: blur()` requires compositor support:
 Current workaround: semi-transparent dark background via CSS.
 True blur requires per-compositor implementation or GTK4 port.
 
+### [Fixed] v0.4 — EN/JA toggle causes widget to collapse
+
+Fixed by adding onmousedown/onmouseup stopPropagation to lang-toggle div,
+preventing mouseup from triggering collapsed state on language switch.
 ---
+
+### [Open] Widget background whitespace on upper-screen placement
+
+When widget is placed near top of screen, white area appears below widget on expand.
+Root cause: GTK window height and WebKit content height mismatch.
+min-height:100vh in body CSS causes WebKit to request full viewport height.
+Partial fix attempted (min-height:0, max-height:none) caused worse regression.
+Needs further investigation.
 
 ## Launch Commands
 
