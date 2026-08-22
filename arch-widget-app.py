@@ -66,6 +66,7 @@ class ArchWidget(Gtk.Window):
 
     def _on_title_change(self, webview, param):
         title = webview.get_title() or ""
+        print(f"title: {title}", flush=True)
         if title.startswith("open:"):
             url = title[5:]
             subprocess.Popen(["xdg-open", url])
@@ -83,6 +84,7 @@ class ArchWidget(Gtk.Window):
             self.resize(500, 700)
         elif title == "collapsed":
             self.resize(500, 88)
+
 
     def load_html(self):
         self.webview.load_uri(f"file://{HTML_FILE}")
