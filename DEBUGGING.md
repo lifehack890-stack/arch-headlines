@@ -54,22 +54,6 @@ Resolved without GTK4 port — titlebar no longer appears in current build.
 
 ## Open Bugs
 
-### [Open] EN/JA toggle causes widget to collapse
-
-Switching language while widget is expanded causes it to collapse unexpectedly.
-
-**Suspected cause:**
-Re-render during language switch triggers a `document.title` change that Python
-interprets as `'collapsed'`.
-
-**Debug steps:**
-```bash
-GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1
-```
-Expand widget, switch EN/JA, check `title:` output in terminal.
-
----
-
 ### [Open] Background not following widget on collapse
 
 Glassmorphism/transparent background does not resize correctly when widget collapses.
