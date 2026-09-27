@@ -2,7 +2,7 @@
 
 A lightweight desktop widget for Arch Linux users — displays the latest news from [archlinux.org/news](https://archlinux.org/news/) as a scrolling ticker, with inline Arch Wiki search.
 
-![arch-headlines](ArchHeadlines.png)
+![arch-headlines](Screenshot from 2026-07-12 12-52-41.png)
 
 ## Features
 
