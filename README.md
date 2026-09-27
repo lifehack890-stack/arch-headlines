@@ -2,7 +2,7 @@
 
 A lightweight desktop widget for Arch Linux users — displays the latest news from [archlinux.org/news](https://archlinux.org/news/) as a scrolling ticker, with inline Arch Wiki search.
 
-![arch-headlines](arch-headlines.png)
+![arch-headlines](ArchHeadlines.png)
 
 ## Features
 
@@ -24,19 +24,35 @@ Arch news items often require manual intervention before upgrading. Missing them
 
 - Linux (systemd-based)
 - Python 3
-- `python3-gi`
-- `gir1.2-webkit2-4.1` (WebKit2GTK 4.1)
-- `curl`
+- python-gobject (PyGObject)
+- python-cairo (PyCairo) — **required**; missing this causes `cairo.Context` foreign struct converter errors
+- GTK 3
+- WebKitGTK 4.1
+- curl
+- systemd (for auto-refresh timer)
+
+> **Note:** `install.sh` does **not** install system dependencies automatically. Please install them manually before running `install.sh`.
 
 ### Arch / Manjaro
 ```bash
-sudo pacman -S python-gobject webkit2gtk-4.1 curl
+sudo pacman -S python python-gobject python-cairo gtk3 webkit2gtk-4.1 curl
+```
+
+### Bazzite / Fedora
+```bash
+sudo rpm-ostree install python3-gobject python3-cairo webkit2gtk4.1 curl
 ```
 
 ### Ubuntu / Zorin / Debian
 ```bash
-sudo apt install python3-gi gir1.2-webkit2-4.1 curl
+sudo apt install python3 python3-gi python3-cairo gir1.2-webkit2-4.1 gir1.2-gtk-3.0 curl
 ```
+
+Verified working with:
+- python-gobject 3.56.3-1
+- gtk3 1:3.24.52-1
+- webkit2gtk-4.1 2.52.5-2
+- python-cairo 1.29.0-2
 
 ## Installation
 
@@ -49,26 +65,25 @@ bash install.sh
 
 `install.sh` will:
 1. Copy files to `~/.local/share/arch-widget/`
-2. Fetch news on first run
-3. Enable systemd user timer (hourly refresh)
-4. Print the path to open in your browser or via the app
+2. Install and enable a systemd user timer for hourly RSS refresh
+3. Run the initial RSS fetch
+4. Print the launch command
 
 ## Running
 
 ```bash
-# As a GTK desktop widget (no titlebar)
 GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
-
-# Or via application launcher (after install)
-# Search "arch-headlines" in your app menu
 ```
 
-> **Note:** `GDK_BACKEND=x11` is required on Wayland sessions for the borderless window to work correctly.
+> **Note:** On Wayland sessions, `GDK_BACKEND=x11` may be required for the borderless window to display correctly.
+
+After running `install.sh`, you can also search for **arch-headlines** in your application launcher.
 
 ## Usage
 
 | Action | Result |
 |--------|--------|
+| Drag header | Reposition widget |
 | Click header | Expand / collapse news list |
 | Hover ticker | Pause scrolling |
 | Click news item | Open article in browser |
@@ -94,16 +109,19 @@ Wiki search uses the [MediaWiki API](https://wiki.archlinux.org/api.php) with `o
 
 ## Known Issues
 
-- Link clicks may not open browser on some Wayland compositors (workaround: drag link to browser)
-- `GDK_BACKEND=x11` required on Wayland
+- On some Wayland compositors, clicking links may not open the external browser. `GDK_BACKEND=x11` is recommended.
+- On Wayland, `GDK_BACKEND=x11` may be required for the borderless window to work correctly.
+- In environments without 3D acceleration, WebKitGTK may print EGL/DRI-related warnings. These do not necessarily prevent the app from launching or running.
+- White space may appear below the widget when placed near the top of the screen (GTK window height / WebKit content height mismatch — under investigation).
 
 ## Roadmap
 
-- [ ] Fix link click → browser on Wayland
+- [ ] Fix whitespace on upper-screen placement
 - [ ] Flatpak packaging
 - [ ] AUR package (`arch-headlines`)
+- [ ] Glassmorphism / Aero styling
+- [ ] GTK4 port (native Wayland support)
 - [ ] Configurable position / size
-- [ ] Dark/light theme toggle
 
 ## License
 
