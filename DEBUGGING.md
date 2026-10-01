@@ -63,7 +63,7 @@ Clicking the language toggle triggered an unintended collapse event.
 
 ---
 
-### [Fixed] v0.4 — UI Overhaul & Layout Streamlining
+### [Fixed] v0.5 — UI Overhaul & Layout Streamlining
 
 **Details:**
 - Redesigned titlebar and ticker integration for a more compact and sleek desktop footprint.
