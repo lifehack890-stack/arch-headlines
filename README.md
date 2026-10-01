@@ -13,6 +13,7 @@ A lightweight desktop widget for Arch Linux users — displays the latest news f
 - **EN / JA** — bilingual interface (English / Japanese), saved across sessions
 - **Auto-refresh** — fetches new RSS data every hour via a systemd user timer
 - **Desktop widget** — borderless, repositionable, and expandable/collapsible
+- **Desktop launcher icon** — SVG application icon installed into the local Breeze icon theme
 - **No browser required** — standalone GTK 3 application powered by WebKitGTK
 
 ## Why
@@ -79,9 +80,11 @@ bash install.sh
 `install.sh` will:
 
 1. Copy application files to `~/.local/share/arch-widget/`
-2. Install and enable a systemd user timer for hourly RSS refresh
-3. Run the initial RSS fetch
-4. Print the launch command
+2. Install the application SVG icon to the local Breeze icon theme
+3. Install and enable a systemd user timer for hourly RSS refresh
+4. Run the initial RSS fetch
+5. Install a desktop launcher entry
+6. Print the launch command
 
 ## Running
 
@@ -110,12 +113,23 @@ the desktop application launcher.
 
 ## File Structure
 
+### Installed application files
+
 ```text
 ~/.local/share/arch-widget/
 ├── arch-widget.html          # Main UI
 ├── arch-widget-app.py        # GTK / WebKitGTK launcher
-├── fetch-news.sh             # RSS fetcher (curl → injects into HTML)
-└── arch-headlines.png        # App icon
+└── fetch-news.sh             # RSS fetcher (curl → injects into HTML)
+```
+
+### Desktop integration
+
+```text
+~/.local/share/applications/
+└── arch-headlines.desktop    # Desktop launcher
+
+~/.local/share/icons/breeze/apps/scalable/
+└── arch-headlines.svg        # Application icon
 ```
 
 ## How It Works
@@ -148,6 +162,31 @@ as:
 Mouse event handling is designed to keep normal WebView interactions,
 window movement, and the right-click quit menu separate.
 
+### Desktop launcher integration
+
+`install.sh` installs a desktop entry and an SVG application icon.
+
+The icon is installed into the local Breeze icon theme:
+
+```text
+~/.local/share/icons/breeze/apps/scalable/arch-headlines.svg
+```
+
+The desktop entry references the icon by name:
+
+```text
+Icon=arch-headlines
+```
+
+The KDE Plasma application cache can be refreshed with:
+
+```bash
+kbuildsycoca6 --noincremental
+```
+
+This allows KDE Plasma to discover and display the application icon through
+the Breeze icon theme.
+
 ## Known Issues
 
 ### Wayland / X11
@@ -168,8 +207,8 @@ Native Wayland support is planned for a future version.
 When the widget is positioned near the top of the screen, expanding it may
 result in unwanted whitespace below the visible content.
 
-This appears to be caused by a mismatch between GTK window sizing and the
-WebKit content viewport.
+This appears to be caused by a mismatch between GTK window sizing and
+the WebKit content viewport.
 
 The issue is currently under investigation.
 
@@ -225,24 +264,37 @@ Core functionality is implemented, including:
 - Automatic RSS refresh
 - systemd user timer integration
 - Desktop launcher integration
+- SVG application icon integration
 
 Current development is focused primarily on UI polishing, bug fixing,
 cross-desktop compatibility, and documentation.
 
 ## Verification Environment
 
-Primary development and verification environment:
+### Primary development environment
 
 - OS: Zorin OS
 - Desktop: GNOME
 - Session: X11
-- Hardware: ThinkPad X260*
-- Backend: GTK / WebKitGTK
+- Hardware: ThinkPad X260
+- Backend: GTK 3 / WebKitGTK 4.1
 - GDK backend: X11
 
-\* The ThinkPad X260 is currently out of service due to a hardware issue
-and requires repair. Previous verification was performed on this device
-before the hardware failure.
+> The ThinkPad X260 is currently out of service due to a hardware issue
+> and requires repair. Previous verification was performed on this device
+> before the hardware failure.
+
+### Current Arch Linux verification environment
+
+- OS: Arch Linux
+- Desktop: KDE Plasma
+- Session: VirtualBox guest
+- Backend: GTK 3 / WebKitGTK 4.1
+- Application launcher: KDE Plasma application menu
+
+The Arch Linux / KDE Plasma environment is used to verify installation,
+desktop launcher integration, application icon handling, and current
+application behavior.
 
 Testing on additional desktop environments and compositors is recommended
 before claiming full cross-desktop compatibility.
