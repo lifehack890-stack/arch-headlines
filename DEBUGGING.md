@@ -137,6 +137,53 @@ widget's expand/collapse handler.
 
 ---
 
+### [Fixed] v0.6 — KDE application launcher icon not displayed
+
+**Root cause:**
+
+The KDE application launcher did not reliably resolve the application's
+custom icon when the desktop entry referenced the icon using a direct
+file path.
+
+The previous desktop entry used:
+
+```ini
+Icon=%h/.local/share/arch-widget/arch-headlines.png
+```
+
+KDE Plasma's icon theme lookup works more reliably when the desktop entry
+uses an icon name and the icon is installed into the active icon theme.
+
+**Fix:**
+
+- Added `arch-headlines.svg` to the repository.
+- Installed the SVG into the local Breeze icon theme:
+
+```text
+~/.local/share/icons/breeze/apps/scalable/arch-headlines.svg
+```
+
+- Updated the desktop entry to use:
+
+```ini
+Icon=arch-headlines
+```
+
+- Refreshed the KDE application cache:
+
+```bash
+kbuildsycoca6 --noincremental
+```
+
+- Updated `install.sh` to install the SVG icon automatically.
+
+**Result:**
+
+The `arch-headlines` icon is now displayed correctly in the KDE
+application launcher.
+
+---
+
 ## Open Bugs
 
 ### [Open] Background does not fully follow widget size when collapsed
@@ -243,7 +290,9 @@ core application bug.
 
 The current implementation is launched using the X11 GDK backend:
 
-    GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+```bash
+GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+```
 
 This is currently required for the application's window management and
 decoration behavior under Wayland environments.
@@ -256,15 +305,21 @@ A future version may improve native Wayland support.
 
 ### Standard launch
 
-    GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+```bash
+GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+```
 
 ### Debug launch
 
-    GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1 | tee /tmp/arch-headlines.log
+```bash
+GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1 | tee /tmp/arch-headlines.log
+```
 
 The debug command captures standard output and error output to:
 
-    /tmp/arch-headlines.log
+```text
+/tmp/arch-headlines.log
+```
 
 ---
 
@@ -290,6 +345,90 @@ and window-sizing issues.
 
 ---
 
+## Git / Repository Troubleshooting
+
+### Local branch is behind `origin/main`
+
+If the remote repository contains commits that are not present locally,
+check the repository state first:
+
+```bash
+git status
+git log --oneline --decorate -5
+```
+
+If local changes need to be preserved:
+
+```bash
+git stash push -u -m "local changes"
+```
+
+Update the branch:
+
+```bash
+git pull --ff-only
+```
+
+Restore the local changes:
+
+```bash
+git stash pop
+```
+
+After restoring, verify the working tree:
+
+```bash
+git status
+git diff
+```
+
+Resolve any conflicts manually before committing.
+
+---
+
+### GitHub HTTPS push authentication
+
+GitHub does not accept account passwords for Git operations over HTTPS.
+
+A Personal Access Token (PAT) is required for HTTPS pushes.
+
+For a fine-grained PAT, repository access should be limited to the
+required repository.
+
+The token must have the repository permission required to push commits,
+including:
+
+```text
+Contents: Read and write
+```
+
+Repository metadata access is also required by GitHub.
+
+Push using:
+
+```bash
+git push origin main
+```
+
+When Git asks for credentials:
+
+```text
+Username: GitHub username
+Password: Personal Access Token
+```
+
+**Never store or document the actual token value in this repository.**
+
+If authentication fails with:
+
+```text
+Password authentication is not supported for Git operations.
+```
+
+verify that Git is using the PAT rather than the GitHub account password.
+
+---
+
 ## Verification Environment
 
 Primary development and verification environment:
@@ -298,6 +437,14 @@ Primary development and verification environment:
 - Desktop: GNOME
 - Session: X11
 - Hardware: ThinkPad X260*
+- Backend: GTK / WebKitGTK
+- Launch backend: `GDK_BACKEND=x11`
+
+Additional verification environment:
+
+- OS: Arch Linux
+- Desktop: KDE Plasma
+- Virtualization: VirtualBox
 - Backend: GTK / WebKitGTK
 - Launch backend: `GDK_BACKEND=x11`
 
