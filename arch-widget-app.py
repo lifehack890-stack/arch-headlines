@@ -80,10 +80,13 @@ class ArchWidget(Gtk.Window):
                 *device.get_position()[1:3],
                 Gtk.get_current_event_time()
             )
-        elif title == "expanded":
-            self.resize(500, 700)
-        elif title == "collapsed":
-            self.resize(500, 88)
+        elif title.startswith("resize:"):
+            try:
+                size = title[7:]
+                width, height = map(int, size.split("x"))
+                self.resize(width, height)
+            except (ValueError, TypeError):
+                print(f"invalid resize request: {title}", file=sys.stderr)
 
 
     def load_html(self):

@@ -36,7 +36,6 @@
     min-height:0;
     padding:0;
     margin:0;
-    clip-path:inset(0 round 12px);
   }
 
   .widget{
@@ -534,7 +533,7 @@ document.getElementById('header').addEventListener('mouseup', (e) => {
   if (dx < 5 && dy < 5) {
     const w = document.getElementById('widget');
     w.classList.toggle('open');
-    document.title = w.classList.contains('open') ? 'expanded' : 'collapsed';
+    setTimeout(syncWindowSize, 400);
   }
 });
 
@@ -549,6 +548,17 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
     if(q) searchWiki(q);
   }
 });
+
+function syncWindowSize() {
+  const widget = document.getElementById('widget');
+  if (!widget) return;
+
+  const rect = widget.getBoundingClientRect();
+  const width = Math.ceil(rect.width);
+  const height = Math.ceil(rect.height);
+
+  document.title = `resize:${width}x${height}`;
+}
 
 function esc(s){
   return String(s)
@@ -585,6 +595,8 @@ function esc(s){
   renderPreview(newsData);
   renderTicker(newsData);
   renderCards(newsData);
+
+  setTimeout(syncWindowSize, 100);
 })();
 
 // Intercept all link clicks and pass to Python via document.title
@@ -594,7 +606,7 @@ document.addEventListener('click', function(e) {
   if (a && a.href && a.href.startsWith('http')) {
     e.preventDefault();
     document.title = 'open:' + a.href;
-    setTimeout(() => { document.title = 'expanded'; }, 500);
+    setTimeout(syncWindowSize, 500);
   }
 }, true);
 </script>
