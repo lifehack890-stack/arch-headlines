@@ -1,115 +1,309 @@
 # arch-headlines — Debug Log
 
+This document records known bugs, their root causes, fixes, and current
+limitations of arch-headlines.
+
+---
+
 ## Fixed Bugs
 
-### [Fixed] v0.2 — Left click not opening links
+### [Fixed] v0.2 — Left-click links not opening
 
 **Root cause:**
-`button-press-event` was connected to both the GTK window and WebView,
-causing left-click events to be intercepted by drag movement logic before reaching the WebView.
+
+`button-press-event` handling was connected to both the GTK window and
+WebView. The previous GTK-level drag implementation intercepted left-click
+events before they could reach the WebView.
 
 **Fix:**
-- Removed drag movement feature (`_on_press` / `_on_motion` deleted)
-- Left-click fully delegated to WebView
-- Links intercepted via JS `document.addEventListener('click')` → `document.title = 'open:URL'` → Python calls `xdg-open`
-- Right-click quit menu retained at window level
 
-**Verified on:** Zorin OS / X11 session (`GDK_BACKEND=x11`) / ThinkPad X260
+- Removed the original GTK-level drag implementation
+  (`_on_press` / `_on_motion`).
+- Left-click interaction was delegated to the WebView.
+- Links are intercepted through JavaScript:
+  `document.addEventListener('click')`
+- The clicked URL is passed to Python through:
+  `document.title = 'open:URL'`
+- Python launches the URL using `xdg-open`.
+
+**Note:**
+
+The original GTK-level drag implementation was intentionally removed in
+v0.2 because it conflicted with normal WebView click handling.
+
+**Verified on:**
+
+- Zorin OS
+- X11 session
+- ThinkPad X260
 
 ---
 
 ### [Fixed] v0.3 — Right-click quit menu not appearing
 
 **Root cause:**
-WebKit's default context menu was intercepting right-click before the GTK window handler.
+
+WebKit's default context menu was handling right-click events before the
+GTK window-level handler could display the application's quit menu.
 
 **Fix:**
-- Connected `button-press-event` to both GTK window and WebView
-- Right-click anywhere on widget now shows "Quit arch-headlines" menu
+
+- Added explicit right-click handling for the WebView.
+- Right-click events are passed to the GTK-level menu handler.
+- Right-clicking anywhere on the widget now provides the
+  `Quit arch-headlines` option.
+
+**Note:**
+
+The right-click handling introduced in v0.3 is separate from the
+left-click drag implementation removed in v0.2.
 
 ---
 
 ### [Fixed] v0.3 — Widget could not be repositioned
 
 **Root cause:**
-No drag implementation existed after removing the conflicting drag logic in v0.2.
+
+The original GTK-level drag implementation was removed in v0.2 because it
+interfered with WebView click events. As a result, the widget temporarily
+had no repositioning mechanism.
 
 **Fix:**
-- Header `mousedown` → `document.title = 'dragstart'` → Python calls `begin_move_drag()`
-- 5px threshold: under 5px = click (expand/collapse), over 5px = drag (reposition)
-- Left-click links unaffected
+
+A new header-based drag implementation was introduced in v0.3:
+
+- Header `mousedown` is detected by the WebView.
+- JavaScript sends `document.title = 'dragstart'`.
+- Python receives the event and calls GTK's `begin_move_drag()`.
+- A 5-pixel movement threshold distinguishes clicking from dragging.
+- Movement under 5 pixels is treated as a normal click.
+- Movement over 5 pixels starts window repositioning.
+- Normal WebView links remain unaffected.
+
+**Implementation note:**
+
+This is a new drag implementation and is not the GTK-level
+`_on_press` / `_on_motion` implementation removed in v0.2.
 
 ---
 
-### [Fixed] v0.3 — Titlebar visible on Wayland
+### [Fixed] v0.3 — Titlebar visible under Wayland
 
 **Root cause:**
-`set_decorated(False)` has no effect on some Wayland compositors.
+
+`set_decorated(False)` does not reliably remove window decorations under
+some Wayland compositors.
 
 **Fix:**
-Resolved without GTK4 port — titlebar no longer appears in current build.
-`GDK_BACKEND=x11` still required for launch.
+
+The current implementation avoids the unwanted titlebar without requiring
+a GTK4 port.
+
+**Current limitation:**
+
+The application currently requires the X11 GDK backend for its window
+management behavior.
 
 ---
 
-### [Fixed] v0.4 — EN/JA toggle causes widget to collapse
+### [Fixed] v0.4 — EN/JA toggle caused widget collapse
 
 **Root cause:**
-Clicking the language toggle triggered an unintended collapse event.
+
+Clicking the language toggle generated mouse events that propagated to the
+widget's expand/collapse handler.
 
 **Fix:**
-- Added `onmousedown`/`onmouseup` with `stopPropagation` to the lang-toggle div
-- Prevented mouseup from triggering the collapsed state during a language switch
+
+- Added `onmousedown` handling to the language toggle.
+- Added `onmouseup` handling to the language toggle.
+- Used `stopPropagation` to prevent the toggle events from reaching the
+  widget's collapse/expand handler.
+- Language switching no longer triggers an unintended collapse.
 
 ---
 
-### [Fixed] v0.5 — UI Overhaul & Layout Streamlining
+### [Fixed] v0.5 — UI overhaul and layout streamlining
 
-**Details:**
-- Redesigned titlebar and ticker integration for a more compact and sleek desktop footprint.
-- Added native EN/JA language toggle with proper event propagation to prevent accidental widget collapse.
-- Optimized spacing, font hierarchy, and search input layout to align with modern desktop widget aesthetics.
-- Fixed layout calculations and component hierarchy to prevent unwanted whitespace during state changes.
+**Changes:**
+
+- Redesigned the titlebar and ticker layout to reduce the widget's
+  vertical footprint.
+- Integrated the EN/JA language toggle into the titlebar.
+- Adjusted spacing and font hierarchy.
+- Optimized the search input layout.
+- Reworked layout calculations and component hierarchy to reduce unwanted
+  whitespace during expand/collapse transitions.
 
 ---
 
 ## Open Bugs
 
-### [Open] Background not following widget on collapse
+### [Open] Background does not fully follow widget size when collapsed
 
-Glassmorphism/transparent background does not resize correctly when widget collapses.
+**Description:**
+
+The transparent/glass-style background does not always resize correctly
+when the widget is collapsed.
 
 **Suspected cause:**
-GTK window resize and WebView repaint are not synchronized.
+
+GTK window resizing and WebKit content repainting are not always
+synchronized during the expand/collapse transition.
+
+**Current status:**
+
+Under investigation.
+
+**Possible solution:**
+
+Further investigation of GTK window resize events and WebKit viewport
+recalculation is required. A future implementation may explicitly
+synchronize the GTK window size with the WebView content size.
 
 ---
 
-### [Open] Glassmorphism effect (compositor-dependent)
+### [Open] Widget background whitespace when positioned near the top of the screen
 
-True `backdrop-filter: blur()` requires compositor support:
-- GNOME → Blur my Shell extension
-- KDE → KWin Rules/scripts
-- Hyprland → `decoration:blur` in config
-- Sway → not supported
+**Description:**
 
-Current workaround: semi-transparent dark background via CSS.
-True blur requires per-compositor implementation or GTK4 port.
+When the widget is positioned near the top of the screen, expanding the
+widget can result in unwanted whitespace below the visible content.
+
+**Suspected cause:**
+
+A mismatch between the GTK window height and the WebKit content viewport.
+
+The current body CSS previously used:
+
+`min-height: 100vh`
+
+This can cause WebKit to request a full viewport height even when the
+actual widget content is smaller.
+
+**Previous attempt:**
+
+The following CSS changes were tested:
+
+- `min-height: 0`
+- `max-height: none`
+
+These changes resulted in additional layout regressions and were therefore
+not retained.
+
+**Current status:**
+
+Under investigation.
+
+**Possible solution:**
+
+Investigate the interaction between:
+
+- GTK window resizing
+- WebKit viewport size
+- CSS viewport units
+- expand/collapse state changes
+
+The final implementation should allow the WebView content to determine
+the required widget height without forcing a full viewport height.
 
 ---
 
-### [Open] Widget background whitespace on upper-screen placement
+## Known Limitations
 
-When widget is placed near top of screen, white area appears below widget on expand.
-Root cause: GTK window height and WebKit content height mismatch.
-`min-height: 100vh` in body CSS causes WebKit to request full viewport height.
-Partial fix attempted (`min-height: 0`, `max-height: none`) caused worse regression.
-Needs further investigation.
+### [Known Limitation] Glassmorphism blur is compositor-dependent
+
+True CSS `backdrop-filter: blur()` depends on compositor support and cannot
+be guaranteed across all Linux desktop environments.
+
+Known environments include:
+
+- **GNOME** — may require Blur my Shell or similar compositor support
+- **KDE Plasma** — may require KWin configuration or scripts
+- **Hyprland** — blur can be configured through compositor settings
+- **Sway** — does not provide the required blur effect in the same way
+
+**Current workaround:**
+
+The application uses a semi-transparent dark background when true
+backdrop blur is unavailable.
+
+**Future options:**
+
+- Per-compositor integration
+- GTK4 migration and native compositor integration
+- Retain the current transparent/semi-transparent fallback
+
+This is considered an environment-dependent limitation rather than a
+core application bug.
+
+---
+
+### [Known Limitation] X11 GDK backend currently required
+
+The current implementation is launched using the X11 GDK backend:
+
+    GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+
+This is currently required for the application's window management and
+decoration behavior under Wayland environments.
+
+A future version may improve native Wayland support.
+
+---
 
 ## Launch Commands
 
-```bash
-# Standard launch (X11 backend required on Wayland)
-GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+### Standard launch
 
-# Debug launch with log output
-GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1 | tee /tmp/arch-headlines.log
+    GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
+
+### Debug launch
+
+    GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1 | tee /tmp/arch-headlines.log
+
+The debug command captures standard output and error output to:
+
+    /tmp/arch-headlines.log
+
+---
+
+## Development Notes
+
+The application uses GTK and WebKitGTK for its desktop UI.
+
+Interaction between the WebView and GTK window is handled through
+JavaScript-to-Python event signaling where necessary. This is used for
+operations such as:
+
+- Opening external links
+- Starting window movement
+- Handling interactions that must be processed by GTK rather than the
+  WebView
+
+Changes to mouse event handling should be tested carefully because GTK
+and WebKit can both receive the same pointer events.
+
+When modifying expand/collapse behavior, test the widget both near the
+top of the screen and in the middle of the desktop to detect viewport
+and window-sizing issues.
+
+---
+
+## Verification Environment
+
+Primary development and verification environment:
+
+- OS: Zorin OS
+- Desktop: GNOME
+- Session: X11
+- Hardware: ThinkPad X260*
+- Backend: GTK / WebKitGTK
+- Launch backend: `GDK_BACKEND=x11`
+
+\* ThinkPad X260 is currently out of service due to a hardware issue
+and requires repair. Previous verification was performed on this device
+before the hardware failure.
+
+Additional testing on other desktop environments and compositors is
+recommended before claiming full cross-desktop compatibility.
