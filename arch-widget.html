@@ -135,7 +135,7 @@
     animation:scroll 80s linear infinite;
   }
   .ticker-track:hover{animation-play-state:paused;}
-  @keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+  @keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(var(--ticker-distance));}}
   .t-item{
     display:inline-flex;align-items:center;gap:7px;
     padding:8px 18px 8px 12px;
@@ -454,7 +454,7 @@ function renderTicker(data) {
   [...makeItems(),...makeItems()].forEach(el => track.appendChild(el));
 
   const chars = seq.reduce((s,i) => s+(i.title||i.text||'').length, 0);
-  track.style.animationDuration = Math.max(40, chars*0.30) + 's';
+  const distance = track.children[seq.length].offsetLeft - track.children[0].offsetLeft; const speed = 50; track.style.setProperty('--ticker-distance', -distance + 'px'); track.style.animationDuration = (distance / speed) + 's';
 }
 
 function renderCards(data) {
