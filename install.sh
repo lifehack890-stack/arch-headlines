@@ -15,8 +15,10 @@ echo "→ installing application files"
 cp "$SCRIPT_DIR/arch-widget-app.py" "$DATA_DIR/"
 cp "$SCRIPT_DIR/arch-widget.html" "$DATA_DIR/"
 cp "$SCRIPT_DIR/fetch-news.sh" "$DATA_DIR/"
-cp "$SCRIPT_DIR/arch-headlines.png" "$DATA_DIR/" 2>/dev/null || true
 chmod +x "$DATA_DIR/fetch-news.sh"
+ICON_DIR="$DATA_ROOT/icons/breeze/apps/scalable"
+mkdir -p "$ICON_DIR"
+cp "$SCRIPT_DIR/arch-headlines.svg" "$ICON_DIR/arch-headlines.svg"
 
 echo "→ installing systemd user units"
 mkdir -p "$SYSTEMD_DIR"
@@ -45,7 +47,7 @@ GenericName[ja_JP]=Arch Headlines
 Comment=Arch Linux News & Wiki Widget
 Comment[ja_JP]=Arch Linux News & Wiki Widget
 Exec=env GDK_BACKEND=x11 "$PYTHON_BIN" "$DATA_DIR/arch-widget-app.py"
-Icon=$DATA_DIR/arch-headlines.png
+Icon=arch-headlines
 Terminal=false
 StartupNotify=false
 Categories=Utility;
