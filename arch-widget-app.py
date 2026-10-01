@@ -18,6 +18,7 @@ class ArchWidget(Gtk.Window):
     def __init__(self):
         super().__init__(title="arch-headlines")
         self.set_default_size(500, 88)
+        self.set_resizable(False)
         self.set_position(Gtk.WindowPosition.NONE)
         self.move(40, 40)
         self.set_decorated(False)
