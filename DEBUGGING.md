@@ -52,6 +52,27 @@ Resolved without GTK4 port — titlebar no longer appears in current build.
 
 ---
 
+### [Fixed] v0.4 — EN/JA toggle causes widget to collapse
+
+**Root cause:**
+Clicking the language toggle triggered an unintended collapse event.
+
+**Fix:**
+- Added `onmousedown`/`onmouseup` with `stopPropagation` to the lang-toggle div
+- Prevented mouseup from triggering the collapsed state during a language switch
+
+---
+
+### [Fixed] v0.4 — UI Overhaul & Layout Streamlining
+
+**Details:**
+- Redesigned titlebar and ticker integration for a more compact and sleek desktop footprint.
+- Added native EN/JA language toggle with proper event propagation to prevent accidental widget collapse.
+- Optimized spacing, font hierarchy, and search input layout to align with modern desktop widget aesthetics.
+- Fixed layout calculations and component hierarchy to prevent unwanted whitespace during state changes.
+
+---
+
 ## Open Bugs
 
 ### [Open] Background not following widget on collapse
@@ -74,18 +95,14 @@ True `backdrop-filter: blur()` requires compositor support:
 Current workaround: semi-transparent dark background via CSS.
 True blur requires per-compositor implementation or GTK4 port.
 
-### [Fixed] v0.4 — EN/JA toggle causes widget to collapse
-
-Fixed by adding onmousedown/onmouseup stopPropagation to lang-toggle div,
-preventing mouseup from triggering collapsed state on language switch.
 ---
 
 ### [Open] Widget background whitespace on upper-screen placement
 
 When widget is placed near top of screen, white area appears below widget on expand.
 Root cause: GTK window height and WebKit content height mismatch.
-min-height:100vh in body CSS causes WebKit to request full viewport height.
-Partial fix attempted (min-height:0, max-height:none) caused worse regression.
+`min-height: 100vh` in body CSS causes WebKit to request full viewport height.
+Partial fix attempted (`min-height: 0`, `max-height: none`) caused worse regression.
 Needs further investigation.
 
 ## Launch Commands
@@ -96,24 +113,3 @@ GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
 
 # Debug launch with log output
 GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py 2>&1 | tee /tmp/arch-headlines.log
-```
-
-## Manual Update
-
-```bash
-# Force news refresh
-bash ~/.local/share/arch-widget/fetch-news.sh
-
-# Check systemd timer
-systemctl --user status arch-widget-news.timer
-```
-
-## Roadmap
-
-- [ ] Fix EN/JA toggle collapse bug
-- [ ] Fix background tracking on collapse
-- [ ] Glassmorphism (compositor-agnostic solution)
-- [ ] Drag-to-reposition polish
-- [ ] Flatpak packaging
-- [ ] AUR package
-- [ ] GTK4 port (Wayland native)
