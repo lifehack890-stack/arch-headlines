@@ -40,6 +40,11 @@ class ArchWidget(Gtk.Window):
         settings.set_allow_file_access_from_file_urls(True)
         settings.set_allow_universal_access_from_file_urls(True)
         self.webview = WebKit2.WebView()
+
+        transparent = Gdk.RGBA()
+        transparent.parse("rgba(0,0,0,0)")
+        self.webview.set_background_color(transparent)
+
         self.webview.set_settings(settings)
         self.webview.connect("notify::title", self._on_title_change)
         self.webview.connect("button-press-event", self._on_win_press)
