@@ -13,7 +13,7 @@ A lightweight desktop widget for Arch Linux users — displays the latest news f
 - **EN / JA** — bilingual interface (English / Japanese), saved across sessions
 - **Auto-refresh** — fetches new RSS data every hour via a systemd user timer
 - **Desktop widget** — borderless, repositionable, and expandable/collapsible
-- **No browser window required** — standalone GTK 3 application powered by WebKitGTK
+- **No separate browser window required** — standalone GTK 3 application powered by WebKitGTK
 ## Why
 
 Arch news items can contain important information about system upgrades and
