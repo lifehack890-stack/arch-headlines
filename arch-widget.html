@@ -24,15 +24,24 @@
     --mono: 'JetBrains Mono','Cascadia Code','Fira Code',Consolas,monospace;
     --ui:   system-ui,-apple-system,sans-serif;
   }
+
   *{margin:0;padding:0;box-sizing:border-box;}
+
   body{
-    background:transparent;font-family:var(--mono);
-    display:flex;align-items:flex-start;justify-content:flex-start;
-    min-height:100vh;padding:0;margin:0;
+    background:transparent;
+    font-family:var(--mono);
+    display:flex;
+    align-items:flex-start;
+    justify-content:flex-start;
+    min-height:0;
+    padding:0;
+    margin:0;
   }
+
   .widget{
-    width:520px;
-    border:1px solid var(--border);border-radius:12px;
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:12px;
     background:var(--bg-panel);
     box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 0 1px rgba(23,147,209,.08);
     overflow:hidden;
@@ -147,8 +156,15 @@
   .t-sep-tip{color:var(--tip);opacity:.2;font-size:9px;margin:0 2px;}
 
   /* PANEL */
-  .panel{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.4,0,.2,1);}
-  .widget.open .panel{max-height:700px;overflow-y:auto;}
+  .panel{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s cubic-bezier(.4,0,.2,1);
+  }
+  .widget.open .panel{
+    max-height:700px;
+    overflow-y:auto;
+  }
   .panel::-webkit-scrollbar{width:3px;}
   .panel::-webkit-scrollbar-track{background:transparent;}
   .panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -367,6 +383,7 @@ function t(key, ...args) {
   const v = I18N[lang][key];
   return typeof v === 'function' ? v(...args) : v;
 }
+
 function setLang(l) {
   lang = l;
   localStorage.setItem('arch-widget-lang', l);
@@ -374,7 +391,11 @@ function setLang(l) {
   document.getElementById('btnJA').classList.toggle('active', l==='ja');
   document.getElementById('searchInput').placeholder = t('searchPlaceholder');
   document.getElementById('searchBtn').textContent   = t('searchBtn');
-  if (newsData.length) { renderPreview(newsData); renderTicker(newsData); renderCards(newsData); }
+  if (newsData.length) {
+    renderPreview(newsData);
+    renderTicker(newsData);
+    renderCards(newsData);
+  }
 }
 
 const WIKI = 'https://wiki.archlinux.org/api.php';
@@ -389,7 +410,9 @@ function buildSequence(news) {
   const seq = [];
   news.forEach((item, i) => {
     seq.push({type:'news', ...item});
-    if ((i+1) % 3 === 0) seq.push({type:'tip', text: tips[Math.floor(i/3) % tips.length]});
+    if ((i+1) % 3 === 0) {
+      seq.push({type:'tip', text: tips[Math.floor(i/3) % tips.length]});
+    }
   });
   return seq;
 }
@@ -399,7 +422,9 @@ function renderPreview(data) {
   wrap.innerHTML = '';
   data.slice(0,2).forEach(d => {
     const a = document.createElement('a');
-    a.className = 'rss-item'; a.href = d.link; a.rel = 'noopener';
+    a.className = 'rss-item';
+    a.href = d.link;
+    a.rel = 'noopener';
     a.innerHTML = `<span class="rss-icon">${RSS_ICON}</span><span class="rss-title">${esc(d.title)}</span><span class="rss-date">${d.date||'—'}</span>`;
     wrap.appendChild(a);
   });
@@ -408,6 +433,7 @@ function renderPreview(data) {
 function renderTicker(data) {
   const track = document.getElementById('tickerTrack');
   const seq = buildSequence(data);
+
   const makeItems = () => seq.map(item => {
     if (item.type === 'tip') {
       const s = document.createElement('span');
@@ -415,13 +441,18 @@ function renderTicker(data) {
       s.innerHTML = `<span class="t-tip-tag">${t('tipTag')}</span>${esc(item.text)}<span class="t-sep-tip">◆</span>`;
       return s;
     }
+
     const a = document.createElement('a');
-    a.className = 't-item'; a.href = item.link; a.rel = 'noopener';
+    a.className = 't-item';
+    a.href = item.link;
+    a.rel = 'noopener';
     a.innerHTML = `${ARCH_SM}<span class="t-date">${item.date||'——'}</span>${esc(item.title)}<span class="t-sep">◆</span>`;
     return a;
   });
+
   track.innerHTML = '';
   [...makeItems(),...makeItems()].forEach(el => track.appendChild(el));
+
   const chars = seq.reduce((s,i) => s+(i.title||i.text||'').length, 0);
   track.style.animationDuration = Math.max(40, chars*0.30) + 's';
 }
@@ -429,9 +460,12 @@ function renderTicker(data) {
 function renderCards(data) {
   const inner = document.getElementById('panelInner');
   inner.innerHTML = `<div class="panel-hdr">${t('newsHeader', data.length)}</div>`;
+
   data.forEach(d => {
     const a = document.createElement('a');
-    a.className = 'card'; a.href = d.link; a.rel = 'noopener';
+    a.className = 'card';
+    a.href = d.link;
+    a.rel = 'noopener';
     a.innerHTML = `${CARD_LOGO}<div class="card-title">${esc(d.title)}</div><span class="card-date">${d.date||'—'}</span>`;
     inner.appendChild(a);
   });
@@ -441,16 +475,31 @@ async function searchWiki(query) {
   const box = document.getElementById('wikiResult');
   box.className = 'wiki-result';
   box.innerHTML = `<div class="wiki-msg">${t('searching')}</div>`;
+
   try {
-    const sr = await fetch(`${WIKI}?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=1&format=json&origin=*`,{signal:AbortSignal.timeout(7000)});
+    const sr = await fetch(
+      `${WIKI}?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=1&format=json&origin=*`,
+      {signal:AbortSignal.timeout(7000)}
+    );
+
     const sd = await sr.json();
     const hit = sd?.query?.search?.[0];
-    if (!hit) { box.innerHTML = `<div class="wiki-msg">${t('noResults')}</div>`; return; }
-    const er = await fetch(`${WIKI}?action=query&prop=extracts&exintro=true&exsentences=4&explaintext=true&titles=${encodeURIComponent(hit.title)}&format=json&origin=*`,{signal:AbortSignal.timeout(7000)});
+
+    if (!hit) {
+      box.innerHTML = `<div class="wiki-msg">${t('noResults')}</div>`;
+      return;
+    }
+
+    const er = await fetch(
+      `${WIKI}?action=query&prop=extracts&exintro=true&exsentences=4&explaintext=true&titles=${encodeURIComponent(hit.title)}&format=json&origin=*`,
+      {signal:AbortSignal.timeout(7000)}
+    );
+
     const ed = await er.json();
     const page = Object.values(ed?.query?.pages||{})[0];
     const extract = page?.extract?.trim() || hit.snippet?.replace(/<[^>]+>/g,'') || '';
     const url = `https://wiki.archlinux.org/title/${encodeURIComponent(hit.title.replace(/ /g,'_'))}`;
+
     box.innerHTML = `
       <div class="wiki-title">§ ${esc(hit.title)}</div>
       <div class="wiki-snippet">${esc(extract.slice(0,380))}${extract.length>380?'…':''}</div>
@@ -475,9 +524,12 @@ document.getElementById('header').addEventListener('mousedown', (e) => {
 
 document.getElementById('header').addEventListener('mouseup', (e) => {
   if (e.button !== 0) return;
+
   const dx = Math.abs(e.screenX - headerDragStartX);
   const dy = Math.abs(e.screenY - headerDragStartY);
+
   document.title = 'dragend';
+
   if (dx < 5 && dy < 5) {
     const w = document.getElementById('widget');
     w.classList.toggle('open');
@@ -485,27 +537,50 @@ document.getElementById('header').addEventListener('mouseup', (e) => {
   }
 });
 
-document.getElementById('searchBtn').addEventListener('click', () => { const q=document.getElementById('searchInput').value.trim(); if(q) searchWiki(q); });
-document.getElementById('searchInput').addEventListener('keydown', e => { if(e.key==='Enter'){const q=e.target.value.trim();if(q)searchWiki(q);} });
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const q=document.getElementById('searchInput').value.trim();
+  if(q) searchWiki(q);
+});
 
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    const q=e.target.value.trim();
+    if(q) searchWiki(q);
+  }
+});
+
+function esc(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
 
 (async () => {
   setLang(lang);
+
   const data = await loadNews();
   const dot = document.getElementById('dot');
+
   if (!data || !data.items || !data.items.length) {
     dot.className = 'dot error';
     document.getElementById('itemCount').textContent = '— news.json not found';
     document.getElementById('itemCount').style.color = 'var(--red)';
-    document.getElementById('tickerTrack').innerHTML = `<span class="t-item" style="color:var(--red)">${t('tickerFail')}</span>`;
-    document.getElementById('panelInner').innerHTML  = `<div class="state">${t('fetchFailed')}</div>`;
+    document.getElementById('tickerTrack').innerHTML =
+      `<span class="t-item" style="color:var(--red)">${t('tickerFail')}</span>`;
+    document.getElementById('panelInner').innerHTML =
+      `<div class="state">${t('fetchFailed')}</div>`;
     return;
   }
+
   newsData = data.items;
+
   dot.className = 'dot ok';
   document.getElementById('itemCount').textContent = `— ${newsData.length} items`;
-  document.getElementById('lastUpdated').textContent = t('updated')+' '+(data.updated || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+  document.getElementById('lastUpdated').textContent =
+    t('updated')+' '+(data.updated || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+
   renderPreview(newsData);
   renderTicker(newsData);
   renderCards(newsData);
@@ -514,6 +589,7 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 // Intercept all link clicks and pass to Python via document.title
 document.addEventListener('click', function(e) {
   const a = e.target.closest('a');
+
   if (a && a.href && a.href.startsWith('http')) {
     e.preventDefault();
     document.title = 'open:' + a.href;
