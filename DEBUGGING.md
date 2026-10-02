@@ -184,6 +184,34 @@ application launcher.
 
 ---
 
+### [Fixed] v0.7 — WebView background was not transparent
+
+**Root cause:**
+
+The WebView background was not explicitly configured as transparent.
+As a result, the WebView could render its own opaque background instead of
+allowing the transparent GTK window background to show through.
+
+**Fix:**
+
+- Added an explicit transparent `Gdk.RGBA` background to the WebView.
+- Applied the transparent background using
+  `WebKit2.WebView.set_background_color()`.
+- Retained the existing GTK RGBA visual and transparent window drawing
+  behavior.
+
+**Result:**
+
+The WebView background is now transparent, allowing the widget's existing
+transparent/semi-transparent appearance to be displayed correctly.
+
+**Current limitation:**
+
+This change provides WebView transparency but does not provide guaranteed
+compositor-level backdrop blur.
+
+---
+
 ## Open Bugs
 
 ### [Open] Background does not fully follow widget size when collapsed
@@ -251,8 +279,8 @@ Investigate the interaction between:
 - CSS viewport units
 - expand/collapse state changes
 
-The final implementation should allow the WebView content to determine
-the required widget height without forcing a full viewport height.
+The final implementation should allow the WebView content to determine the
+required widget height without forcing a full viewport height.
 
 ---
 
@@ -272,8 +300,8 @@ Known environments include:
 
 **Current workaround:**
 
-The application uses a semi-transparent dark background when true
-backdrop blur is unavailable.
+The application uses a transparent WebView background with a
+semi-transparent dark UI background when true backdrop blur is unavailable.
 
 **Future options:**
 
@@ -448,7 +476,7 @@ Additional verification environment:
 - Backend: GTK / WebKitGTK
 - Launch backend: `GDK_BACKEND=x11`
 
-\* ThinkPad X260 is currently out of service due to a hardware issue
+* ThinkPad X260 is currently out of service due to a hardware issue
 and requires repair. Previous verification was performed on this device
 before the hardware failure.
 
