@@ -1,4 +1,4 @@
-# arch-headlines
+# arch-headlines　
 
 A lightweight desktop widget for Arch Linux users — displays the latest news from [archlinux.org/news](https://archlinux.org/news/) as a scrolling ticker, with inline Arch Wiki search.
 
@@ -13,7 +13,6 @@ A lightweight desktop widget for Arch Linux users — displays the latest news f
 - **EN / JA** — bilingual interface (English / Japanese), saved across sessions
 - **Auto-refresh** — fetches new RSS data every hour via a systemd user timer
 - **Desktop widget** — borderless, repositionable, and expandable/collapsible
-- **Desktop launcher icon** — SVG application icon installed into the local Breeze icon theme
 - **No browser required** — standalone GTK 3 application powered by WebKitGTK
 
 ## Why
@@ -80,11 +79,9 @@ bash install.sh
 `install.sh` will:
 
 1. Copy application files to `~/.local/share/arch-widget/`
-2. Install the application SVG icon to the local Breeze icon theme
+2. Run the initial RSS fetch
 3. Install and enable a systemd user timer for hourly RSS refresh
-4. Run the initial RSS fetch
-5. Install a desktop launcher entry
-6. Print the launch command
+4. Print the launch command
 
 ## Running
 
@@ -117,20 +114,21 @@ the desktop application launcher.
 
 ```text
 ~/.local/share/arch-widget/
-├── arch-widget.html          # Main UI
-├── arch-widget-app.py        # GTK / WebKitGTK launcher
-└── fetch-news.sh             # RSS fetcher (curl → injects into HTML)
+├── arch-widget.html # Main UI
+├── arch-widget-app.py # GTK / WebKitGTK launcher
+└── fetch-news.sh # RSS fetcher (curl → injects into HTML)
 ```
 
 ### Desktop integration
 
-```text
-~/.local/share/applications/
-└── arch-headlines.desktop    # Desktop launcher
+The repository contains a desktop launcher entry:
 
-~/.local/share/icons/breeze/apps/scalable/
-└── arch-headlines.svg        # Application icon
+```text
+arch-headlines.desktop
 ```
+
+The current `install.sh` does not install the desktop launcher entry or
+application icon automatically.
 
 ## How It Works
 
@@ -164,28 +162,11 @@ window movement, and the right-click quit menu separate.
 
 ### Desktop launcher integration
 
-`install.sh` installs a desktop entry and an SVG application icon.
+A desktop launcher entry exists in the repository, but the current
+`install.sh` does not install it automatically.
 
-The icon is installed into the local Breeze icon theme:
-
-```text
-~/.local/share/icons/breeze/apps/scalable/arch-headlines.svg
-```
-
-The desktop entry references the icon by name:
-
-```text
-Icon=arch-headlines
-```
-
-The KDE Plasma application cache can be refreshed with:
-
-```bash
-kbuildsycoca6 --noincremental
-```
-
-This allows KDE Plasma to discover and display the application icon through
-the Breeze icon theme.
+The launcher and icon integration therefore remains a manual / development
+setup rather than an installed feature provided by `install.sh`.
 
 ## Known Issues
 
@@ -263,8 +244,6 @@ Core functionality is implemented, including:
 - Right-click quit menu
 - Automatic RSS refresh
 - systemd user timer integration
-- Desktop launcher integration
-- SVG application icon integration
 
 Current development is focused primarily on UI polishing, bug fixing,
 cross-desktop compatibility, and documentation.
@@ -293,8 +272,7 @@ cross-desktop compatibility, and documentation.
 - Application launcher: KDE Plasma application menu
 
 The Arch Linux / KDE Plasma environment is used to verify installation,
-desktop launcher integration, application icon handling, and current
-application behavior.
+application behavior, and current application functionality.
 
 Testing on additional desktop environments and compositors is recommended
 before claiming full cross-desktop compatibility.
@@ -313,7 +291,7 @@ before claiming full cross-desktop compatibility.
 ## Debugging
 
 For known bugs, root causes, fixes, launch commands, and development notes,
-see [DEBUGGING.md](DEBUGGING.md).
+seesee [DEBUGGING.md](DEBUGGING.md).
 
 ## License
 
