@@ -80,7 +80,9 @@ bash install.sh
 1. Copy application files to `~/.local/share/arch-widget/`
 2. Run the initial RSS fetch
 3. Install and enable a systemd user timer for hourly RSS refresh
-4. Print the launch command
+4. Install the desktop launcher entry
+5. Install the application icon
+6. Print the launch command
 
 ## Running
 
@@ -92,7 +94,7 @@ GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
 > borderless window and window-management behavior. On Wayland sessions,
 > `GDK_BACKEND=x11` is currently required.
 
-After running `install.sh`, `arch-headlines` may also be available through
+After running `install.sh`, Arch-headlines should be available through
 the desktop application launcher.
 
 ## Usage
@@ -126,7 +128,7 @@ The repository contains a desktop launcher entry:
 arch-headlines.desktop
 ```
 
-The current `install.sh` does not install the desktop launcher entry or
+The `install.sh` script installs the desktop launcher entry and
 application icon automatically.
 
 ## How It Works
@@ -161,11 +163,9 @@ window movement, and the right-click quit menu separate.
 
 ### Desktop launcher integration
 
-A desktop launcher entry exists in the repository, but the current
-`install.sh` does not install it automatically.
-
-The launcher and icon integration therefore remains a manual / development
-setup rather than an installed feature provided by `install.sh`.
+The repository includes a desktop launcher entry and application icon.
+`install.sh` installs both automatically into the user's local desktop
+integration directories.
 
 ## Known Issues
 
@@ -194,11 +194,11 @@ The issue is currently under investigation.
 
 ### Background resize during collapse
 
-The transparent/glass-style background may not always resize correctly when
-the widget is collapsed.
+The widget background may not always resize correctly when the widget is
+collapsed or expanded.
 
-This is also related to GTK window resizing and WebKit content repainting
-and remains under investigation.
+This is related to GTK window resizing and WebKit content repainting and
+remains under investigation.
 
 ### WebKitGTK / hardware acceleration warnings
 
@@ -207,24 +207,6 @@ warnings.
 
 These warnings do not necessarily prevent the application from launching or
 running.
-
-## Glassmorphism
-
-The application uses a transparent/semi-transparent background as a
-fallback for environments where compositor-level blur is unavailable.
-
-True CSS `backdrop-filter: blur()` depends on the desktop compositor and
-cannot currently be guaranteed across all Linux desktop environments.
-
-Examples:
-
-- GNOME may require an extension such as Blur my Shell
-- KDE Plasma may require KWin configuration
-- Hyprland provides compositor-level blur configuration
-- Sway does not provide the same blur functionality
-
-This is considered an environment-dependent limitation rather than a core
-application bug.
 
 ## Development Status
 
@@ -287,7 +269,7 @@ before claiming full cross-desktop compatibility.
 ## Debugging
 
 For known bugs, root causes, fixes, launch commands, and development notes,
-seesee [DEBUGGING.md](DEBUGGING.md).
+see [DEBUGGING.md](DEBUGGING.md).
 
 ## License
 
