@@ -278,15 +278,12 @@ before claiming full cross-desktop compatibility.
 
 ## Roadmap
 
-- [ ] Fix whitespace on upper-screen placement
-- [ ] Improve background resizing during expand/collapse
-- [ ] Flatpak packaging
-- [ ] AUR package (`arch-headlines`)
-- [ ] Glassmorphism / Aero styling
 - [ ] GTK4 port / improved native Wayland support
 - [ ] Configurable position / size
+- [ ] GNOME Shell Extension / Waybar integration
+- [ ] KDE Plasma integration if there is sufficient demand
 - [ ] Additional desktop environment testing
-
+- [x] Remove glassmorphism / Aero styling in favor of a simpler, more reliable UI
 ## Debugging
 
 For known bugs, root causes, fixes, launch commands, and development notes,
