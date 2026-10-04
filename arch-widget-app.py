@@ -16,7 +16,7 @@ def run_fetch():
 
 class ArchWidget(Gtk.Window):
     def __init__(self):
-        super().__init__(title="arch-headlines")
+        super().__init__(title="Arch-headlines")
         self.set_default_size(500, 88)
         self.set_resizable(False)
         self.set_position(Gtk.WindowPosition.NONE)
@@ -62,7 +62,7 @@ class ArchWidget(Gtk.Window):
     def _on_win_press(self, widget, event):
         if event.button == 3:
             menu = Gtk.Menu()
-            item = Gtk.MenuItem(label="Quit arch-headlines")
+            item = Gtk.MenuItem(label="Quit Arch-headlines")
             item.connect("activate", lambda _: Gtk.main_quit())
             menu.append(item)
             menu.show_all()

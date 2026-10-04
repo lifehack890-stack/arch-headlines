@@ -40,8 +40,8 @@ PYTHON_BIN="$(command -v python3)"
 cat > "$APPLICATIONS_DIR/arch-headlines.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=arch-headlines
-Name[ja_JP]=arch-headlines
+Name=Arch-headlines
+Name[ja_JP]=Arch-headlines
 GenericName=Arch Headlines
 GenericName[ja_JP]=Arch Headlines
 Comment=Arch Linux News & Wiki Widget
