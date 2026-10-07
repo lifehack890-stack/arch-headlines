@@ -14,7 +14,6 @@ A lightweight desktop widget for Arch Linux users — displays the latest news f
 - **Auto-refresh** — fetches new RSS data every hour via a systemd user timer
 - **Live connection status** — connection indicator updates when network availability changes
 - **Automatic reconnect refresh** — RSS is fetched again when network connectivity returns
-- **Cached news display** — previously fetched news remains visible while offline
 - **Desktop widget** — borderless, repositionable, and expandable/collapsible
 - **No separate browser window required** — standalone GTK 3 application powered by WebKitGTK
 ## Why
