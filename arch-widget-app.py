@@ -2,7 +2,7 @@
 import gi, os, subprocess, sys
 gi.require_version("Gtk", "3.0")
 gi.require_version("WebKit2", "4.1")
-from gi.repository import Gtk, WebKit2, GLib, Gdk
+from gi.repository import Gtk, WebKit2, GLib, Gdk, Gio
 
 DATA_DIR = os.path.join(os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share")), "arch-widget")
 HTML_FILE = os.path.join(DATA_DIR, "arch-widget.html")
@@ -11,8 +11,18 @@ FETCH_SCRIPT = os.path.join(DATA_DIR, "fetch-news.sh")
 def run_fetch():
     try:
         subprocess.run(["bash", FETCH_SCRIPT], check=True, timeout=15)
+        return True
     except Exception as e:
         print(f"fetch error: {e}", file=sys.stderr)
+        return False
+
+def run_fetch_async(callback):
+    def worker():
+        result = run_fetch()
+        GLib.idle_add(callback, result)
+
+    import threading
+    threading.Thread(target=worker, daemon=True).start()
 
 class ArchWidget(Gtk.Window):
     def __init__(self):
@@ -41,6 +51,13 @@ class ArchWidget(Gtk.Window):
         settings.set_allow_universal_access_from_file_urls(True)
         self.webview = WebKit2.WebView()
 
+        self._fetch_in_progress = False
+        self.network_monitor = Gio.NetworkMonitor.get_default()
+        self.network_monitor.connect(
+            "network-changed",
+            self._on_network_changed
+        )
+
         transparent = Gdk.RGBA()
         transparent.parse("rgba(0,0,0,0)")
         self.webview.set_background_color(transparent)
@@ -50,9 +67,64 @@ class ArchWidget(Gtk.Window):
         self.webview.connect("button-press-event", self._on_win_press)
         self.add(self.webview)
         self.show_all()
-        run_fetch()
+        self.fetch_ok = run_fetch()
         self.load_html()
         GLib.timeout_add_seconds(3600, self.refresh)
+
+    def _on_network_changed(self, monitor, available):
+        print(f"network changed: {available}", flush=True)
+
+        if not available:
+            self.fetch_ok = False
+            self.webview.evaluate_javascript(
+                "setConnectionStatus(false);",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None
+            )
+            return
+
+        if self._fetch_in_progress:
+            return
+
+        self._fetch_in_progress = True
+        run_fetch_async(self._on_reconnect_fetch_done)
+
+    def _on_reconnect_fetch_done(self, success):
+        self._fetch_in_progress = False
+
+        if not self.network_monitor.get_network_available():
+            self.fetch_ok = False
+            self.webview.evaluate_javascript(
+                "setConnectionStatus(false);",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None
+            )
+            return False
+
+        self.fetch_ok = success
+
+        if success:
+            self.load_html()
+        else:
+            self.webview.evaluate_javascript(
+                "setConnectionStatus(false);",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None
+            )
+
+        return False
 
     def _on_draw(self, widget, cr):
         cr.set_source_rgba(0, 0, 0, 0)
@@ -96,10 +168,11 @@ class ArchWidget(Gtk.Window):
 
 
     def load_html(self):
-        self.webview.load_uri(f"file://{HTML_FILE}")
+        fetch_status = "ok" if self.fetch_ok else "error"
+        self.webview.load_uri(f"file://{HTML_FILE}#fetch={fetch_status}")
 
     def refresh(self):
-        run_fetch()
+        self.fetch_ok = run_fetch()
         self.load_html()
         return True
 

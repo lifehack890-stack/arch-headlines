@@ -12,6 +12,9 @@ A lightweight desktop widget for Arch Linux users — displays the latest news f
 - **Wiki search** — search the Arch Wiki inline, read a summary, and jump to the full article
 - **EN / JA** — bilingual interface (English / Japanese), saved across sessions
 - **Auto-refresh** — fetches new RSS data every hour via a systemd user timer
+- **Live connection status** — connection indicator updates when network availability changes
+- **Automatic reconnect refresh** — RSS is fetched again when network connectivity returns
+- **Cached news display** — previously fetched news remains visible while offline
 - **Desktop widget** — borderless, repositionable, and expandable/collapsible
 - **No separate browser window required** — standalone GTK 3 application powered by WebKitGTK
 ## Why
@@ -146,6 +149,12 @@ This avoids the need for an external proxy or API key.
 Wiki search uses the [MediaWiki API](https://wiki.archlinux.org/api.php)
 with `origin=*`, which supports cross-origin requests and is free to use.
 
+Network availability is monitored through `Gio.NetworkMonitor`. When the
+connection is lost, the status indicator changes immediately while previously
+fetched news remains available. When connectivity returns, the RSS feed is
+refetched asynchronously. The indicator returns to the online state only after
+the RSS fetch succeeds.
+
 ### GTK / WebKitGTK integration
 
 The application uses GTK 3 and WebKitGTK 4.1 for its desktop UI.
@@ -194,11 +203,14 @@ The issue is currently under investigation.
 
 ### Background resize during collapse
 
-The widget background may not always resize correctly when the widget is
-collapsed or expanded.
+The widget previously showed occasional background resizing issues when
+collapsing, expanding, or reloading after a network reconnect.
 
-This is related to GTK window resizing and WebKit content repainting and
-remains under investigation.
+The expanded/collapsed state is now preserved across internal WebView reloads,
+which significantly reduces unintended resize behavior.
+
+Some GTK/WebKitGTK sizing edge cases may still remain depending on the desktop
+environment and window manager.
 
 ### WebKitGTK / hardware acceleration warnings
 
@@ -225,9 +237,15 @@ Core functionality is implemented, including:
 - Right-click quit menu
 - Automatic RSS refresh
 - systemd user timer integration
+- Live network status monitoring
+- RSS refresh after network reconnection
+- Offline cached-news display
 
 Current development is focused primarily on UI polishing, bug fixing,
-cross-desktop compatibility, and documentation.
+cross-desktop integration, packaging, and documentation.
+
+Experimental desktop integrations are also in development for GNOME Shell
+and KDE Plasma 6.
 
 ## Verification Environment
 
@@ -262,8 +280,8 @@ before claiming full cross-desktop compatibility.
 
 - [ ] GTK4 port / improved native Wayland support
 - [ ] Configurable position / size
-- [ ] GNOME Shell Extension / Waybar integration
-- [ ] KDE Plasma integration if there is sufficient demand
+- [ ] GNOME Shell Extension integration
+- [ ] KDE Plasma 6 integration
 - [ ] Additional desktop environment testing
 - [x] Remove glassmorphism / Aero styling in favor of a simpler, more reliable UI
 ## Debugging
