@@ -257,9 +257,8 @@ and KDE Plasma 6.
 - Backend: GTK 3 / WebKitGTK 4.1
 - GDK backend: X11
 
-> The ThinkPad X260 is currently out of service due to a hardware issue
-> and requires repair. Previous verification was performed on this device
-> before the hardware failure.
+>The ThinkPad X260 was temporarily out of service due to a hardware issue.
+>The issue has since been resolved. Previous verification was performed on this device before the repair.
 
 ### Current Arch Linux verification environment
 
