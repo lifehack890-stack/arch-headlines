@@ -277,12 +277,14 @@ before claiming full cross-desktop compatibility.
 
 ## Roadmap
 
-- [ ] GTK4 port / improved native Wayland support
+- [ ] Improve GTK3 frontend compatibility and maintenance
+- [ ] Evaluate GTK4 / native Wayland support as a long-term option
 - [ ] Configurable position / size
 - [ ] GNOME Shell Extension integration
 - [ ] KDE Plasma 6 integration
 - [ ] Additional desktop environment testing
 - [x] Remove glassmorphism / Aero styling in favor of a simpler, more reliable UI
+
 ## Debugging
 
 For known bugs, root causes, fixes, launch commands, and development notes,
