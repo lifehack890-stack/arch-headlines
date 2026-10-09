@@ -2,11 +2,15 @@
 set -euo pipefail
 
 if [ "$#" -ne 1 ]; then
-    echo "usage: $0 <article-url>" >&2
+    echo "usage: $0 <article-id>" >&2
     exit 1
 fi
 
-ARTICLE_URL="$1"
+ARTICLE_ID="$1"
+if [[ ! "$ARTICLE_ID" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "arch-headlines: invalid article ID" >&2
+    exit 1
+fi
 
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/arch-headlines-plasma"
 NEWS_FILE="$DATA_DIR/news.json"
@@ -26,11 +30,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-python3 - "$ARTICLE_URL" "$NEWS_FILE" "$STATE_FILE" "$STATE_TMP" "$NEWS_TMP" <<'PY'
+python3 - "$ARTICLE_ID" "$NEWS_FILE" "$STATE_FILE" "$STATE_TMP" "$NEWS_TMP" <<'PY'
 import json
+import hashlib
 import sys
 
-article_url, news_file, state_file, state_tmp, news_tmp = sys.argv[1:6]
+article_id, news_file, state_file, state_tmp, news_tmp = sys.argv[1:6]
 
 try:
     with open(news_file, "r", encoding="utf-8") as f:
@@ -87,12 +92,26 @@ if (
     )
     sys.exit(1)
 
-read_links = set(state["read_links"])
-read_links.add(article_url)
+matching_items = [
+    item for item in news["items"]
+    if item.get("id") == article_id
+    and hashlib.sha256(
+        item["link"].encode("utf-8")
+    ).hexdigest() == article_id
+]
 
-for item in news.get("items", []):
-    if item.get("link") == article_url:
-        item["unread"] = False
+if not matching_items:
+    print(
+        "arch-headlines: article error: ID not found or inconsistent",
+        file=sys.stderr
+    )
+    sys.exit(1)
+
+read_links = set(state["read_links"])
+read_links.add(matching_items[0]["link"])
+
+for item in matching_items:
+    item["unread"] = False
 
 news["unread_count"] = sum(
     1 for item in news.get("items", [])
