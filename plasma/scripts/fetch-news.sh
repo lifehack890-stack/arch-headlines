@@ -74,17 +74,19 @@ initialize_state = False
 try:
     with open(state_file, "r", encoding="utf-8") as f:
         state = json.load(f)
-
-    read_links = set(state.get("read_links", []))
-except (FileNotFoundError, json.JSONDecodeError, OSError):
-    # First run (or invalid state): use current feed as the baseline.
-    # This prevents every existing article from appearing unread.
+except FileNotFoundError:
+    # Only a missing state file is treated as a first run.
     read_links = {
         item["link"]
         for item in items
         if item["link"]
     }
     initialize_state = True
+except (json.JSONDecodeError, OSError) as exc:
+    print(f"arch-headlines: state error: {exc}", file=sys.stderr)
+    sys.exit(1)
+else:
+    read_links = set(state.get("read_links", []))
 
 unread_count = 0
 
