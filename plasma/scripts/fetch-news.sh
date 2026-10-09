@@ -86,7 +86,23 @@ except (json.JSONDecodeError, OSError) as exc:
     print(f"arch-headlines: state error: {exc}", file=sys.stderr)
     sys.exit(1)
 else:
-    read_links = set(state.get("read_links", []))
+    if (
+        not isinstance(state, dict)
+        or type(state.get("version")) is not int
+        or state["version"] != 1
+        or not isinstance(state.get("read_links"), list)
+        or not all(
+            isinstance(link, str) and bool(link)
+            for link in state["read_links"]
+        )
+    ):
+        print(
+            "arch-headlines: state error: invalid schema",
+            file=sys.stderr
+        )
+        sys.exit(1)
+
+    read_links = set(state["read_links"])
 
 unread_count = 0
 
