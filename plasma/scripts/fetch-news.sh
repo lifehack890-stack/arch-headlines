@@ -119,6 +119,5 @@ if [ -s "$STATE_TMP" ]; then
     mv "$STATE_TMP" "$STATE_FILE"
 fi
 
-trap - EXIT
 
 echo "wrote $OUTPUT_FILE"

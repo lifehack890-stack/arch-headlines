@@ -73,6 +73,5 @@ PY
 mv "$STATE_TMP" "$STATE_FILE"
 mv "$NEWS_TMP" "$NEWS_FILE"
 
-trap - EXIT
 
 cat "$NEWS_FILE"
