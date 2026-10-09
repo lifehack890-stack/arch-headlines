@@ -32,19 +32,62 @@ import sys
 
 article_url, news_file, state_file, state_tmp, news_tmp = sys.argv[1:6]
 
-with open(news_file, "r", encoding="utf-8") as f:
-    news = json.load(f)
+try:
+    with open(news_file, "r", encoding="utf-8") as f:
+        news = json.load(f)
+except (json.JSONDecodeError, OSError) as exc:
+    print(f"arch-headlines: news error: {exc}", file=sys.stderr)
+    sys.exit(1)
+
+if (
+    not isinstance(news, dict)
+    or not isinstance(news.get("items"), list)
+    or type(news.get("unread_count")) is not int
+    or news["unread_count"] < 0
+    or not all(
+        isinstance(item, dict)
+        and isinstance(item.get("link"), str)
+        and bool(item["link"])
+        and type(item.get("unread")) is bool
+        for item in news["items"]
+    )
+):
+    print(
+        "arch-headlines: news error: invalid schema",
+        file=sys.stderr
+    )
+    sys.exit(1)
 
 try:
     with open(state_file, "r", encoding="utf-8") as f:
         state = json.load(f)
-except (FileNotFoundError, json.JSONDecodeError, OSError):
+except FileNotFoundError:
+    # Missing state is treated as an initial state.
     state = {
         "version": 1,
         "read_links": []
     }
+except (json.JSONDecodeError, OSError) as exc:
+    print(f"arch-headlines: state error: {exc}", file=sys.stderr)
+    sys.exit(1)
 
-read_links = set(state.get("read_links", []))
+if (
+    not isinstance(state, dict)
+    or type(state.get("version")) is not int
+    or state["version"] != 1
+    or not isinstance(state.get("read_links"), list)
+    or not all(
+        isinstance(link, str) and bool(link)
+        for link in state["read_links"]
+    )
+):
+    print(
+        "arch-headlines: state error: invalid schema",
+        file=sys.stderr
+    )
+    sys.exit(1)
+
+read_links = set(state["read_links"])
 read_links.add(article_url)
 
 for item in news.get("items", []):
