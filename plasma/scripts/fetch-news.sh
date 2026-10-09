@@ -13,7 +13,7 @@ mkdir -p "$DATA_DIR"
 XML=$(curl -fsS --max-time 10 "$FEED_URL")
 
 exec 9>"$LOCK_FILE"
-flock 9
+flock -w 10 9 || { echo "arch-headlines: lock acquisition failed or timed out (10s)" >&2; exit 1; }
 
 NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
 STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")

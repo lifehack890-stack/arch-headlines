@@ -16,7 +16,7 @@ LOCK_FILE="$DATA_DIR/state.lock"
 mkdir -p "$DATA_DIR"
 
 exec 9>"$LOCK_FILE"
-flock 9
+flock -w 10 9 || { echo "arch-headlines: lock acquisition failed or timed out (10s)" >&2; exit 1; }
 
 STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")
 NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
