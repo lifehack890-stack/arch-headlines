@@ -35,6 +35,7 @@ python3 - "$FEED_TMP" "$NEWS_TMP" "$STATE_FILE" "$STATE_TMP" <<'PYEOF'
 import sys
 import json
 import datetime
+import hashlib
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
@@ -64,6 +65,7 @@ for item in root.findall(".//item")[:12]:
     items.append({
         "title": title,
         "link": link,
+        "id": hashlib.sha256(link.encode("utf-8")).hexdigest() if link else "",
         "date": date,
         "author": author
     })
