@@ -12,6 +12,7 @@ PlasmoidItem {
     Plasma5Support.DataSource {
         id: newsSource
         engine: "executable"
+        interval: 30000
         connectedSources: ["/usr/bin/cat \"" + root.newsFilePath + "\""]
 
         onNewData: function(sourceName, data) {
@@ -42,11 +43,59 @@ PlasmoidItem {
         }
     }
 
+    Plasma5Support.DataSource {
+        id: markReadSource
+        engine: "executable"
+
+        onNewData: function(sourceName, data) {
+            try {
+                const parsed = JSON.parse(data.stdout)
+                root.newsItems = parsed.items || []
+                root.unreadCount = parsed.unread_count || 0
+            } catch (e) {
+                console.log("arch-headlines mark-read failed:", e)
+            }
+
+            disconnectSource(sourceName)
+        }
+    }
+
 
     property string dataRoot: StandardPaths.writableLocation(StandardPaths.GenericDataLocation)
     property string newsFileUrl: dataRoot + "/arch-headlines-plasma/news.json"
     property string newsFilePath: newsFileUrl.replace("file://", "")
     property var newsItems: []
+
+    function openArticle(index) {
+        if (index < 0 || index >= root.newsItems.length)
+            return
+
+        const article = root.newsItems[index]
+        Qt.openUrlExternally(article.link)
+
+        if (!article.unread)
+            return
+
+        const script =
+            root.dataRoot.replace("file://", "") +
+            "/arch-headlines-plasma/mark-read.sh"
+
+        markReadSource.connectSource(
+            script + " \"" + article.link + "\""
+        )
+    }
+
+    function refreshNews() {
+        const source = "/usr/bin/cat \"" + root.newsFilePath + "\""
+        newsSource.disconnectSource(source)
+        newsSource.connectSource(source)
+    }
+
+    onExpandedChanged: {
+        if (expanded)
+            refreshNews()
+    }
+
     function relativeTime(isoString) {
         if (!isoString)
             return "--"
@@ -277,8 +326,7 @@ PlasmoidItem {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                if (root.newsItems.length > 0)
-                                    Qt.openUrlExternally(root.newsItems[0].link)
+                                root.openArticle(0)
                             }
                         }
                     }
@@ -339,8 +387,7 @@ PlasmoidItem {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                if (root.newsItems.length > 1)
-                                    Qt.openUrlExternally(root.newsItems[1].link)
+                                root.openArticle(1)
                             }
                         }
                     }
@@ -399,8 +446,7 @@ PlasmoidItem {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                if (root.newsItems.length > 2)
-                                    Qt.openUrlExternally(root.newsItems[2].link)
+                                root.openArticle(2)
                             }
                         }
                     }
@@ -459,8 +505,7 @@ PlasmoidItem {
                             anchors.fill: parent
                             hoverEnabled: true
                             onClicked: {
-                                if (root.newsItems.length > 3)
-                                    Qt.openUrlExternally(root.newsItems[3].link)
+                                root.openArticle(3)
                             }
                         }
                     }

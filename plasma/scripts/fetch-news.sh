@@ -4,23 +4,33 @@ set -euo pipefail
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/arch-headlines-plasma"
 FEED_URL="https://archlinux.org/feeds/news/"
 OUTPUT_FILE="$DATA_DIR/news.json"
-TMP_FILE="$DATA_DIR/news.json.tmp"
 STATE_FILE="$DATA_DIR/state.json"
+LOCK_FILE="$DATA_DIR/state.lock"
 
 mkdir -p "$DATA_DIR"
 
+# Network access stays outside the lock.
 XML=$(curl -fsS --max-time 10 "$FEED_URL")
 
-python3 - "$TMP_FILE" "$STATE_FILE" <<PYEOF
+exec 9>"$LOCK_FILE"
+flock 9
+
+NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
+STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")
+
+cleanup() {
+    rm -f "$NEWS_TMP" "$STATE_TMP"
+}
+trap cleanup EXIT
+
+python3 - "$NEWS_TMP" "$STATE_FILE" "$STATE_TMP" <<PYEOF
 import sys
-import os
 import json
 import datetime
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
-output_file = sys.argv[1]
-state_file = sys.argv[2]
+output_file, state_file, state_tmp = sys.argv[1:4]
 
 xml = r"""$XML"""
 root = ET.fromstring(xml)
@@ -93,8 +103,6 @@ with open(output_file, "w", encoding="utf-8") as f:
     f.write("\n")
 
 if initialize_state:
-    state_tmp = state_file + ".tmp"
-
     state = {
         "version": 1,
         "read_links": sorted(read_links)
@@ -103,10 +111,14 @@ if initialize_state:
     with open(state_tmp, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
         f.write("\n")
-
-    os.replace(state_tmp, state_file)
 PYEOF
 
-mv "$TMP_FILE" "$OUTPUT_FILE"
+mv "$NEWS_TMP" "$OUTPUT_FILE"
+
+if [ -s "$STATE_TMP" ]; then
+    mv "$STATE_TMP" "$STATE_FILE"
+fi
+
+trap - EXIT
 
 echo "wrote $OUTPUT_FILE"

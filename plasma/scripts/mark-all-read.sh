@@ -4,14 +4,26 @@ set -euo pipefail
 DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/arch-headlines-plasma"
 NEWS_FILE="$DATA_DIR/news.json"
 STATE_FILE="$DATA_DIR/state.json"
+LOCK_FILE="$DATA_DIR/state.lock"
 
-python3 - "$NEWS_FILE" "$STATE_FILE" <<'PYEOF'
+mkdir -p "$DATA_DIR"
+
+exec 9>"$LOCK_FILE"
+flock 9
+
+STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")
+NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
+
+cleanup() {
+    rm -f "$STATE_TMP" "$NEWS_TMP"
+}
+trap cleanup EXIT
+
+python3 - "$NEWS_FILE" "$STATE_FILE" "$STATE_TMP" "$NEWS_TMP" <<'PYEOF'
 import sys
-import os
 import json
 
-news_file = sys.argv[1]
-state_file = sys.argv[2]
+news_file, state_file, state_tmp, news_tmp = sys.argv[1:5]
 
 with open(news_file, "r", encoding="utf-8") as f:
     news = json.load(f)
@@ -42,9 +54,6 @@ state = {
     "read_links": sorted(read_links)
 }
 
-state_tmp = state_file + ".tmp"
-news_tmp = news_file + ".tmp"
-
 with open(state_tmp, "w", encoding="utf-8") as f:
     json.dump(state, f, ensure_ascii=False, indent=2)
     f.write("\n")
@@ -52,9 +61,11 @@ with open(state_tmp, "w", encoding="utf-8") as f:
 with open(news_tmp, "w", encoding="utf-8") as f:
     json.dump(news, f, ensure_ascii=False, indent=2)
     f.write("\n")
-
-os.replace(state_tmp, state_file)
-os.replace(news_tmp, news_file)
-
-print(json.dumps(news, ensure_ascii=False))
 PYEOF
+
+mv "$STATE_TMP" "$STATE_FILE"
+mv "$NEWS_TMP" "$NEWS_FILE"
+
+trap - EXIT
+
+cat "$NEWS_FILE"
