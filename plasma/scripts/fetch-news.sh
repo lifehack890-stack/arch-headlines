@@ -9,8 +9,21 @@ LOCK_FILE="$DATA_DIR/state.lock"
 
 mkdir -p "$DATA_DIR"
 
+FEED_TMP=$(mktemp "$DATA_DIR/feed.xml.tmp.XXXXXX")
+NEWS_TMP=""
+STATE_TMP=""
+
+cleanup() {
+    for file in "$FEED_TMP" "$NEWS_TMP" "$STATE_TMP"; do
+        if [[ -n "$file" ]]; then
+            rm -f -- "$file"
+        fi
+    done
+}
+trap cleanup EXIT
+
 # Network access stays outside the lock.
-XML=$(curl -fsS --max-time 10 "$FEED_URL")
+curl -fsS --max-time 10 -o "$FEED_TMP" "$FEED_URL"
 
 exec 9>"$LOCK_FILE"
 flock -w 10 9 || { echo "arch-headlines: lock acquisition failed or timed out (10s)" >&2; exit 1; }
@@ -18,22 +31,16 @@ flock -w 10 9 || { echo "arch-headlines: lock acquisition failed or timed out (1
 NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
 STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")
 
-cleanup() {
-    rm -f "$NEWS_TMP" "$STATE_TMP"
-}
-trap cleanup EXIT
-
-python3 - "$NEWS_TMP" "$STATE_FILE" "$STATE_TMP" <<PYEOF
+python3 - "$FEED_TMP" "$NEWS_TMP" "$STATE_FILE" "$STATE_TMP" <<'PYEOF'
 import sys
 import json
 import datetime
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
-output_file, state_file, state_tmp = sys.argv[1:4]
+feed_file, output_file, state_file, state_tmp = sys.argv[1:5]
 
-xml = r"""$XML"""
-root = ET.fromstring(xml)
+root = ET.parse(feed_file).getroot()
 
 ns = {
     "dc": "http://purl.org/dc/elements/1.1/"
