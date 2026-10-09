@@ -47,7 +47,7 @@ GenericName[ja_JP]=Arch Headlines
 Comment=Arch Linux News & Wiki Widget
 Comment[ja_JP]=Arch Linux News & Wiki Widget
 Exec=env GDK_BACKEND=x11 "$PYTHON_BIN" "$DATA_DIR/arch-widget-app.py"
-Icon=arch-headlines
+Icon=$ICON_DIR/arch-headlines.svg
 Terminal=false
 StartupNotify=false
 Categories=Utility;

@@ -139,7 +139,7 @@
   .t-item{
     display:inline-flex;align-items:center;gap:7px;
     padding:8px 18px 8px 12px;
-    font-size:11px;color:var(--text);
+    font-size:10px;color:var(--text);
     text-decoration:none;flex-shrink:0;transition:color .15s;
   }
   .t-item:hover{color:var(--blue);}
@@ -400,6 +400,18 @@ function setLang(l) {
 
 const WIKI = 'https://wiki.archlinux.org/api.php';
 
+function fetchIsOk() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  return params.get('fetch') === 'ok';
+}
+
+function setConnectionStatus(available) {
+  const dot = document.getElementById('dot');
+  if (!dot) return;
+
+  dot.className = available ? 'dot ok' : 'dot error';
+}
+
 function loadNews() {
   if (typeof ARCH_NEWS_DATA !== 'undefined') return Promise.resolve(ARCH_NEWS_DATA);
   return Promise.resolve(null);
@@ -533,6 +545,10 @@ document.getElementById('header').addEventListener('mouseup', (e) => {
   if (dx < 5 && dy < 5) {
     const w = document.getElementById('widget');
     w.classList.toggle('open');
+    sessionStorage.setItem(
+      'arch-widget-open',
+      w.classList.contains('open') ? '1' : '0'
+    );
     setTimeout(syncWindowSize, 400);
   }
 });
@@ -571,6 +587,11 @@ function esc(s){
 (async () => {
   setLang(lang);
 
+  const widget = document.getElementById('widget');
+  if (sessionStorage.getItem('arch-widget-open') === '1') {
+    widget.classList.add('open');
+  }
+
   const data = await loadNews();
   const dot = document.getElementById('dot');
 
@@ -587,7 +608,7 @@ function esc(s){
 
   newsData = data.items;
 
-  dot.className = 'dot ok';
+  dot.className = fetchIsOk() ? 'dot ok' : 'dot error';
   document.getElementById('itemCount').textContent = `— ${newsData.length} items`;
   document.getElementById('lastUpdated').textContent =
     t('updated')+' '+(data.updated || new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));

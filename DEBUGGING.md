@@ -482,3 +482,22 @@ before the hardware failure.
 
 Additional testing on other desktop environments and compositors is
 recommended before claiming full cross-desktop compatibility.
+
+## GNOME Shell 46 / Wayland: extension changes may require logout/login
+
+During GNOME Shell 46 testing on Wayland, disabling and re-enabling an extension with `gnome-extensions` did not always reload updated JavaScript module code.
+
+Observed behavior:
+
+- Updated `extension.js` was correctly copied to the extension directory.
+- `gnome-extensions disable` followed by `gnome-extensions enable` sometimes continued running the previously loaded code.
+- Newly added signal handlers and debug logging did not take effect.
+- Logging out and logging back in forced GNOME Shell to reload the extension and resolved the issue.
+
+When debugging GNOME Shell extensions on Wayland, if updated code appears not to run despite the deployed file being correct, perform a full logout/login before assuming the extension logic is broken.
+
+Useful verification:
+
+`journalctl --user -b --no-pager | grep 'Arch Headlines'`
+
+This behavior was observed during development on GNOME Shell 46.0 under Wayland.
