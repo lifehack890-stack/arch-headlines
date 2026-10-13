@@ -16,6 +16,16 @@ PlasmoidItem {
         connectedSources: ["/usr/bin/cat " + root.shellQuote(root.newsFilePath)]
 
         onNewData: function(sourceName, data) {
+            if (data["exit code"] !== 0 || data["exit status"] !== 0) {
+                console.log(
+                    "arch-headlines: executable failed:",
+                    "exit code =", data["exit code"],
+                    "exit status =", data["exit status"],
+                    "stderr =", data.stderr
+                )
+                return
+            }
+
             try {
                 const parsed = JSON.parse(data.stdout)
                 root.newsItems = parsed.items || []
@@ -31,6 +41,17 @@ PlasmoidItem {
         engine: "executable"
 
         onNewData: function(sourceName, data) {
+            if (data["exit code"] !== 0 || data["exit status"] !== 0) {
+                console.log(
+                    "arch-headlines: executable failed:",
+                    "exit code =", data["exit code"],
+                    "exit status =", data["exit status"],
+                    "stderr =", data.stderr
+                )
+                disconnectSource(sourceName)
+                return
+            }
+
             try {
                 const parsed = JSON.parse(data.stdout)
                 root.newsItems = parsed.items || []
@@ -48,6 +69,17 @@ PlasmoidItem {
         engine: "executable"
 
         onNewData: function(sourceName, data) {
+            if (data["exit code"] !== 0 || data["exit status"] !== 0) {
+                console.log(
+                    "arch-headlines: executable failed:",
+                    "exit code =", data["exit code"],
+                    "exit status =", data["exit status"],
+                    "stderr =", data.stderr
+                )
+                disconnectSource(sourceName)
+                return
+            }
+
             try {
                 const parsed = JSON.parse(data.stdout)
                 root.newsItems = parsed.items || []
