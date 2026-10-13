@@ -146,9 +146,9 @@ PlasmoidItem {
         newsSource.connectSource(source)
     }
 
-    onExpandedChanged: {
-        if (expanded)
-            refreshNews()
+    onExpandedChanged: function() {
+        if (root.expanded)
+            root.refreshNews()
     }
 
     function relativeTime(isoString) {
