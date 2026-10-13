@@ -26,13 +26,7 @@ PlasmoidItem {
                 return
             }
 
-            try {
-                const parsed = JSON.parse(data.stdout)
-                root.newsItems = parsed.items || []
-                root.unreadCount = parsed.unread_count || 0
-            } catch (e) {
-                console.log("arch-headlines JSON parse failed:", e)
-            }
+            root.applyNewsData(data.stdout)
         }
     }
 
@@ -52,13 +46,7 @@ PlasmoidItem {
                 return
             }
 
-            try {
-                const parsed = JSON.parse(data.stdout)
-                root.newsItems = parsed.items || []
-                root.unreadCount = parsed.unread_count || 0
-            } catch (e) {
-                console.log("arch-headlines mark-all-read failed:", e)
-            }
+            root.applyNewsData(data.stdout)
 
             disconnectSource(sourceName)
         }
@@ -80,13 +68,7 @@ PlasmoidItem {
                 return
             }
 
-            try {
-                const parsed = JSON.parse(data.stdout)
-                root.newsItems = parsed.items || []
-                root.unreadCount = parsed.unread_count || 0
-            } catch (e) {
-                console.log("arch-headlines mark-read failed:", e)
-            }
+            root.applyNewsData(data.stdout)
 
             disconnectSource(sourceName)
         }
@@ -97,6 +79,51 @@ PlasmoidItem {
     property string newsFileUrl: dataRoot + "/arch-headlines-plasma/news.json"
     property string newsFilePath: newsFileUrl.replace("file://", "")
     property var newsItems: []
+
+    function applyNewsData(stdout) {
+        try {
+            const parsed = JSON.parse(stdout)
+
+            if (parsed === null ||
+                typeof parsed !== "object" ||
+                Array.isArray(parsed) ||
+                !Array.isArray(parsed.items) ||
+                parsed.items.length > 12 ||
+                !Number.isSafeInteger(parsed.unread_count) ||
+                parsed.unread_count < 0) {
+                throw new Error("invalid news structure")
+            }
+
+            let unread = 0
+
+            for (const item of parsed.items) {
+                if (item === null ||
+                    typeof item !== "object" ||
+                    Array.isArray(item) ||
+                    typeof item.title !== "string" ||
+                    typeof item.link !== "string" ||
+                    typeof item.id !== "string" ||
+                    typeof item.date !== "string" ||
+                    typeof item.author !== "string" ||
+                    typeof item.unread !== "boolean") {
+                    throw new Error("invalid article structure")
+                }
+
+                if (item.unread)
+                    unread++
+            }
+
+            if (parsed.unread_count !== unread)
+                throw new Error("unread count mismatch")
+
+            root.newsItems = parsed.items
+            root.unreadCount = parsed.unread_count
+            return true
+        } catch (e) {
+            console.log("arch-headlines: invalid news data:", e)
+            return false
+        }
+    }
 
     function shellQuote(value) {
         return "'" + String(value).replace(/'/g, "'\\''") + "'"
