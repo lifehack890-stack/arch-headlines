@@ -3,6 +3,15 @@
 set -euo pipefail
 
 DATA_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}"
+# XDG base directories must use absolute paths.
+case "$DATA_ROOT" in
+    /*) ;;
+    *)
+        echo "install.sh: XDG_DATA_HOME must be absolute" >&2
+        exit 1
+        ;;
+esac
+
 DATA_DIR="$DATA_ROOT/arch-widget"
 APPLICATIONS_DIR="$DATA_ROOT/applications"
 SYSTEMD_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
@@ -22,7 +31,37 @@ cp "$SCRIPT_DIR/arch-headlines.svg" "$ICON_DIR/arch-headlines.svg"
 
 echo "→ installing systemd user units"
 mkdir -p "$SYSTEMD_DIR"
-cp "$SCRIPT_DIR/arch-widget-news.service" "$SYSTEMD_DIR/"
+# Generate a service using the resolved XDG data directory.
+# Encode paths for systemd unit syntax.
+python3 - "$SYSTEMD_DIR/arch-widget-news.service" "$DATA_ROOT" "$DATA_DIR/fetch-news.sh" <<'PYUNIT'
+from pathlib import Path
+import sys
+
+unit_path = Path(sys.argv[1])
+data_root = sys.argv[2]
+script_path = sys.argv[3]
+
+def escape_systemd(value):
+    return (
+        value.replace(chr(92), chr(92) * 2)
+             .replace('"', chr(92) + '"')
+             .replace('%', '%%')
+    )
+
+unit = (
+    "[Unit]\n"
+    "Description=Arch Linux News Fetcher (arch-widget)\n"
+    "After=network-online.target\n"
+    "Wants=network-online.target\n"
+    "\n"
+    "[Service]\n"
+    "Type=oneshot\n"
+    f'Environment="XDG_DATA_HOME={escape_systemd(data_root)}"\n'
+    f'ExecStart="{escape_systemd(script_path)}"\n'
+)
+
+unit_path.write_text(unit, encoding="utf-8")
+PYUNIT
 cp "$SCRIPT_DIR/arch-widget-news.timer" "$SYSTEMD_DIR/"
 
 echo "→ enabling and starting timer"
