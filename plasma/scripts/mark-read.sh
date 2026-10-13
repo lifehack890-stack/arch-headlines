@@ -22,13 +22,20 @@ mkdir -p "$DATA_DIR"
 exec 9>"$LOCK_FILE"
 flock -w 10 9 || { echo "arch-headlines: lock acquisition failed or timed out (10s)" >&2; exit 1; }
 
-STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")
-NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
+STATE_TMP=""
+NEWS_TMP=""
 
 cleanup() {
-    rm -f "$STATE_TMP" "$NEWS_TMP"
+    for file in "$STATE_TMP" "$NEWS_TMP"; do
+        if [[ -n "$file" ]]; then
+            rm -f -- "$file"
+        fi
+    done
 }
 trap cleanup EXIT
+
+STATE_TMP=$(mktemp "$DATA_DIR/state.json.tmp.XXXXXX")
+NEWS_TMP=$(mktemp "$DATA_DIR/news.json.tmp.XXXXXX")
 
 python3 - "$ARTICLE_ID" "$NEWS_FILE" "$STATE_FILE" "$STATE_TMP" "$NEWS_TMP" <<'PY'
 import json
