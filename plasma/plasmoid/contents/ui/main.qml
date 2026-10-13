@@ -13,7 +13,7 @@ PlasmoidItem {
         id: newsSource
         engine: "executable"
         interval: 30000
-        connectedSources: ["/usr/bin/cat \"" + root.newsFilePath + "\""]
+        connectedSources: ["/usr/bin/cat " + root.shellQuote(root.newsFilePath)]
 
         onNewData: function(sourceName, data) {
             try {
@@ -66,6 +66,10 @@ PlasmoidItem {
     property string newsFilePath: newsFileUrl.replace("file://", "")
     property var newsItems: []
 
+    function shellQuote(value) {
+        return "'" + String(value).replace(/'/g, "'\\''") + "'"
+    }
+
     function openArticle(index) {
         if (index < 0 || index >= root.newsItems.length)
             return
@@ -100,12 +104,12 @@ PlasmoidItem {
             "/arch-headlines-plasma/mark-read.sh"
 
         markReadSource.connectSource(
-            script + " " + articleId
+            root.shellQuote(script) + " " + articleId
         )
     }
 
     function refreshNews() {
-        const source = "/usr/bin/cat \"" + root.newsFilePath + "\""
+        const source = "/usr/bin/cat " + root.shellQuote(root.newsFilePath)
         newsSource.disconnectSource(source)
         newsSource.connectSource(source)
     }
@@ -562,9 +566,12 @@ PlasmoidItem {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                markAllReadSource.connectSource(
+                                const script =
                                     root.dataRoot.replace("file://", "") +
                                     "/arch-headlines-plasma/mark-all-read.sh"
+
+                                markAllReadSource.connectSource(
+                                    root.shellQuote(script)
                                 )
                             }
                         }
