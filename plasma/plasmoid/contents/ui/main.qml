@@ -71,17 +71,36 @@ PlasmoidItem {
             return
 
         const article = root.newsItems[index]
-        Qt.openUrlExternally(article.link)
+        const articleUrl = article.link
+        const urlMatch = typeof articleUrl === "string"
+            ? articleUrl.match(/^https:\/\/archlinux\.org\/news\/[a-z0-9-]+\/$/)
+            : null
+
+        if (!urlMatch || urlMatch[0] !== articleUrl) {
+            console.log("arch-headlines: unsafe article URL; open skipped")
+            return
+        }
+
+        Qt.openUrlExternally(articleUrl)
 
         if (!article.unread)
             return
+
+        const articleId = article.id
+
+        if (typeof articleId !== "string" ||
+            articleId.length !== 64 ||
+            !/^[0-9a-f]{64}$/.test(articleId)) {
+            console.log("arch-headlines: invalid article ID; mark-read skipped")
+            return
+        }
 
         const script =
             root.dataRoot.replace("file://", "") +
             "/arch-headlines-plasma/mark-read.sh"
 
         markReadSource.connectSource(
-            script + " \"" + article.link + "\""
+            script + " " + articleId
         )
     }
 
