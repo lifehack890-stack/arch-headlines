@@ -270,6 +270,8 @@ export default class ArchHeadlinesExtension extends Extension {
                 readLinks = new Set(state.read_links);
         } catch (e) {
             console.error(`Arch Headlines state: ${e}`);
+            if (!stateFile.query_exists(null))
+                readLinks = new Set(items.map(article => article.link));
         }
 
         for (const article of items)

@@ -1,0 +1,8 @@
+[Unit]
+Description=Arch-Headlines Pico News Fetcher
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash %h/.local/share/gnome-shell/extensions/arch-headlines@lifehack890-stack/fetch-news.sh

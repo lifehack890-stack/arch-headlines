@@ -1,0 +1,10 @@
+[Unit]
+Description=Arch-Headlines Pico News Update Timer
+
+[Timer]
+OnStartupSec=30sec
+OnUnitActiveSec=1h
+Unit=arch-headlines-pico-news.service
+
+[Install]
+WantedBy=timers.target

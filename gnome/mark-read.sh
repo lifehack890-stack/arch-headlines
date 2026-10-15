@@ -36,7 +36,11 @@ try:
 except FileNotFoundError:
     state = {"read_links": []}
 
-read_links = set(state.get("read_links", []))
+links = state.get("read_links") if isinstance(state, dict) else None
+if not isinstance(links, list) or not all(isinstance(x, str) for x in links):
+    raise ValueError("Invalid state.json: read_links must be a list of strings")
+
+read_links = set(links)
 read_links.add(article_url)
 
 state["read_links"] = list(read_links)
