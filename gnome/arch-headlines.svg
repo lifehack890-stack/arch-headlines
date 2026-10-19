@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="512" height="512"
+     viewBox="0 0 52 52">
+  <defs>
+    <linearGradient id="lg1" x1="26" y1="4" x2="26" y2="48"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4ab8f0"/>
+      <stop offset="100%" stop-color="#1565a0"/>
+    </linearGradient>
+
+    <linearGradient id="lg2" x1="10" y1="20" x2="26" y2="48"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1793d1" stop-opacity=".7"/>
+      <stop offset="100%" stop-color="#0d4f80"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Main triangle -->
+  <path d="M26 4L4 46h44L26 4z"
+        fill="url(#lg1)" opacity=".9"/>
+
+  <!-- Inner arch cutout -->
+  <path d="M26 22 C22 28 18 36 16 44 H36
+           C34 36 30 28 26 22z"
+        fill="#0d1822"/>
+
+  <!-- Left face shading -->
+  <path d="M26 4L4 46h12L26 22z"
+        fill="url(#lg2)"/>
+
+  <!-- Highlight streak -->
+  <path d="M26 6L22 18l4-4z"
+        fill="white" opacity=".25"/>
+</svg>

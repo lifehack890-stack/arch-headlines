@@ -1,0 +1,7 @@
+{
+  "uuid": "arch-headlines@lifehack890-stack",
+  "name": "Arch Headlines",
+  "description": "Arch Linux news indicator for GNOME Shell",
+  "shell-version": ["46"],
+  "version": 1
+}

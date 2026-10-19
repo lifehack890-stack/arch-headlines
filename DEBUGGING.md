@@ -284,6 +284,46 @@ required widget height without forcing a full viewport height.
 
 ---
 
+### [Open] KDE Plasma 6 — News text overlaps in narrow widgets
+
+**Description:**
+
+News text can overlap when the Plasma panel widget is narrow.
+The problem was observed in the live Arch-Hero KDE Plasma session.
+
+**Current status:**
+
+Reproducible layout issue; responsive sizing work is pending. The widget
+can display news after a session restart, but that does not resolve this issue.
+
+**Planned verification:**
+
+Test compact and expanded representations at several panel widths, then
+repeat after a logout/login. This issue is separate from GTK window sizing.
+
+---
+
+### [Deferred] KDE plasmoidviewer — SIGSEGV on exit (code 139)
+
+**Observation:**
+
+A segmentation fault was reported while closing `plasmoidviewer` during
+KDE Plasma 6 development testing. The crash-report stack trace involved
+Qt input-method handling during object teardown.
+
+**Uncertainty:**
+
+This does **not** establish that arch-headlines caused the crash. The root
+cause remains undetermined; a viewer shutdown failure is not proof that
+the installed widget crashes in normal `plasmashell` operation.
+
+**Current status:**
+
+Investigation is deferred unless the problem is reproduced during normal
+Plasma operation. Do not describe this as fixed or exonerated.
+
+---
+
 ## Known Limitations
 
 ### [Known Limitation] Glassmorphism blur is compositor-dependent
@@ -314,22 +354,23 @@ core application bug.
 
 ---
 
-### [Known Limitation] X11 GDK backend currently required
+### [Known Limitation] GTK frontend requires the X11 GDK backend
 
-The current implementation is launched using the X11 GDK backend:
+The standalone GTK frontend is launched using the X11 GDK backend:
 
 ```bash
 GDK_BACKEND=x11 python3 ~/.local/share/arch-widget/arch-widget-app.py
 ```
 
-This is currently required for the application's window management and
-decoration behavior under Wayland environments.
+This is currently required for the GTK application's window management and
+decoration behavior under Wayland environments. It is not a requirement of
+the native KDE Plasma or GNOME Shell frontends.
 
 A future version may improve native Wayland support.
 
 ---
 
-## Launch Commands
+## Launch Commands (GTK frontend)
 
 ### Standard launch
 
@@ -353,7 +394,7 @@ The debug command captures standard output and error output to:
 
 ## Development Notes
 
-The application uses GTK and WebKitGTK for its desktop UI.
+The standalone GTK frontend uses GTK and WebKitGTK for its desktop UI.
 
 Interaction between the WebView and GTK window is handled through
 JavaScript-to-Python event signaling where necessary. This is used for
@@ -432,11 +473,9 @@ Contents: Read and write
 
 Repository metadata access is also required by GitHub.
 
-Push using:
-
-```bash
-git push origin main
-```
+Push the intended branch explicitly (for example, `main` after merging,
+or `hardening` when publishing that development branch). Do not assume
+that the current branch should be pushed to `main`.
 
 When Git asks for credentials:
 
@@ -459,29 +498,35 @@ verify that Git is using the PAT rather than the GitHub account password.
 
 ## Verification Environment
 
-Primary development and verification environment:
+### Arch-Hero — Arch Linux / KDE Plasma 6 (VirtualBox)
 
-- OS: Zorin OS
-- Desktop: GNOME
-- Session: X11
-- Hardware: ThinkPad X260*
-- Backend: GTK / WebKitGTK
-- Launch backend: `GDK_BACKEND=x11`
+- Development and integration-test environment for the unified installer.
+- Isolated GTK, KDE, and GNOME installer tests used redirected XDG paths and
+  mocked external services; they did not prove native desktop compatibility.
+- Live KDE Plasma widget upgrade using the unified installer: succeeded.
+- The KDE refresh timer was enabled and active (waiting).
+- The installed widget displayed news after a logout/login.
+- Narrow panel layout and some click/read-state interactions remain unverified
+  or unresolved; successful installation is not full integration sign-off.
 
-Additional verification environment:
+### ThinkPad X260 — Zorin OS 18.1 (native)
 
-- OS: Arch Linux
-- Desktop: KDE Plasma
-- Virtualization: VirtualBox
-- Backend: GTK / WebKitGTK
-- Launch backend: `GDK_BACKEND=x11`
+- GNOME-based desktop; `gnome-shell --version` returned `GNOME Shell 46.0`.
+- Earlier GTK/X11 tests were performed on this hardware.
+- The prior hardware problem has been resolved; the machine is operational.
+- GNOME Shell version compatibility is confirmed, but unified-installer
+  native GNOME Extension installation/upgrade tests are **pending**.
 
-* ThinkPad X260 is currently out of service due to a hardware issue
-and requires repair. Previous verification was performed on this device
-before the hardware failure.
+### Planned clean install — EndeavourOS / KDE Plasma 6
 
-Additional testing on other desktop environments and compositors is
-recommended before claiming full cross-desktop compatibility.
+Clean installation, automatic detection, initial fetch, systemd user timer,
+widget display, reinstall and upgrade tests are **pending**.
+
+Do not infer support for XFCE or other desktop environments from the
+installer's fallback classification. Cross-desktop compatibility is not yet
+established.
+
+---
 
 ## GNOME Shell 46 / Wayland: extension changes may require logout/login
 
@@ -501,3 +546,74 @@ Useful verification:
 `journalctl --user -b --no-pager | grep 'Arch Headlines'`
 
 This behavior was observed during development on GNOME Shell 46.0 under Wayland.
+
+---
+
+## Unified Installer Verification — 2026-10-19
+
+The unified `install.sh` supports `GTK`, `KDE Plasma 6`, and `GNOME Shell`.
+Its interactive menu contains Auto Detect, GTK, KDE, GNOME, and Cancel.
+For isolated testing it accepts `ARCH_HEADLINES_FRONTEND` values:
+`auto`, `gtk`, `kde`, `gnome`, and `cancel`.
+
+### Isolated sandbox / mock tests
+
+| Test | Observed result |
+|---|---|
+| Interactive choices 1–5 | Expected outcomes passed |
+| Invalid choice 6 | Rejected with exit code 1 |
+| Auto Detect: KDE | Classified as KDE |
+| Auto Detect: GNOME / Zorin | Classified as GNOME |
+| Auto Detect: XFCE | Fell back to GTK; **not** evidence of XFCE support |
+| GTK initial installation | Passed with mocked services |
+| KDE installation / upgrade | Both passed with mocked package tooling |
+| GNOME initial installation | Passed with mocked services |
+| Cancel selection | Exited without installing |
+| Unsupported `$` in XDG data path | Rejected during preflight |
+
+**Limits:** These tests used redirected XDG directories, mocked `systemctl`,
+KDE package tooling and GNOME version reporting, and test news data. They
+do not establish a successful clean OS installation, working GNOME Shell
+extension, or full panel interaction behavior.
+
+### Live Arch-Hero / KDE tests
+
+- Installed/upgraded the KDE Plasmoid with the unified installer using
+  `ARCH_HEADLINES_FRONTEND=kde`.
+- The installed `main.qml` was compared with the working-tree source and
+  reported as matching.
+- The `arch-headlines-plasma-news.timer` was loaded, enabled and active
+  (waiting), and an initial `news.json` was generated.
+- The installed widget displayed news after logout/login.
+- The responsive text-overlap defect remains open; interaction and read-state
+  verification is incomplete.
+- A backup was taken before the live upgrade.
+
+### Outstanding tests / documentation maintenance
+
+- **EndeavourOS (new VM):** clean KDE install, timer, UI, reinstall and upgrade.
+- **Zorin OS 18.1 on X260:** native GNOME Shell 46 extension install,
+  activation, fetch, read/unread actions, and upgrade.
+- **KDE runtime:** confirm link opening, mark-read and mark-all-read actions,
+  and behavior at narrow panel widths.
+- **GTK:** handle the separate `.dot` offline/fetch-failure status issue;
+  do not conflate cached-news availability with live connectivity.
+- **Installer:** the initial fetch is best-effort. If it fails, the installer
+  warns and continues; `systemctl --user` itself is a required preflight.
+- **KDE runtime dependency:** the Plasma5Support QML module is required by
+  the QML import. The current installer warns if it is not detected.
+- **Release:** update README development-branch notes when the unified
+  installer is actually merged/published on `main`.
+
+### Installed user-unit names
+
+| Frontend | Service | Timer |
+|---|---|---|
+| GTK | `arch-widget-news.service` | `arch-widget-news.timer` |
+| KDE Plasma 6 | `arch-headlines-plasma-news.service` | `arch-headlines-plasma-news.timer` |
+| GNOME Shell | `arch-headlines-gnome-news.service` | `arch-headlines-gnome-news.timer` |
+
+KDE helper scripts `fetch-news.sh`, `mark-read.sh`, and `mark-all-read.sh`
+are installed under `$XDG_DATA_HOME/arch-headlines-plasma/` (default
+`~/.local/share/arch-headlines-plasma/`), **not** inside the installed
+Plasmoid package directory.
