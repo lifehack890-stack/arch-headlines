@@ -108,11 +108,17 @@ export default class ArchHeadlinesExtension extends Extension {
 
                 const scriptPath = this.dir.get_child('mark-read.sh').get_path();
 
-                const proc = Gio.Subprocess.new(
-                    [scriptPath, article.link],
-                    Gio.SubprocessFlags.STDOUT_PIPE |
-                    Gio.SubprocessFlags.STDERR_PIPE
-                );
+                let proc;
+                try {
+                    proc = Gio.Subprocess.new(
+                        [scriptPath, article.link],
+                        Gio.SubprocessFlags.STDOUT_SILENCE
+                    );
+                } catch (e) {
+                    article.markingRead = false;
+                    console.error(`Arch Headlines mark-read launch failed: ${e}`);
+                    return;
+                }
 
                 proc.wait_check_async(null, (process, result) => {
                     try {
@@ -162,11 +168,16 @@ export default class ArchHeadlinesExtension extends Extension {
 
             const scriptPath = this.dir.get_child('mark-all-read.sh').get_path();
 
-            const proc = Gio.Subprocess.new(
-                [scriptPath],
-                Gio.SubprocessFlags.STDOUT_PIPE |
-                Gio.SubprocessFlags.STDERR_PIPE
-            );
+            let proc;
+            try {
+                proc = Gio.Subprocess.new(
+                    [scriptPath],
+                    Gio.SubprocessFlags.STDOUT_SILENCE
+                );
+            } catch (e) {
+                console.error(`Arch Headlines mark-all-read launch failed: ${e}`);
+                return;
+            }
 
             proc.wait_check_async(null, (process, result) => {
                 try {
