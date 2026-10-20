@@ -46,3 +46,49 @@ mv -T -- "$BUILD" "$SIM/candidate"
 trap - EXIT
 
 echo "SIM CANDIDATE: PASS"
+
+# Simulated upgrade with automatic rollback on failure.
+rollback_on_exit() {
+    local rc=$?
+    trap - EXIT
+
+    if (( rc != 0 )) && [[ -d "$SIM/previous" && ! -L "$SIM/previous" ]]; then
+        if [[ -e "$SIM/current" || -L "$SIM/current" ]]; then
+            if [[ -e "$SIM/candidate" || -L "$SIM/candidate" ]]; then
+                echo "SIM ROLLBACK: BLOCKED (candidate exists)" >&2
+                exit "$rc"
+            fi
+
+            if ! mv -T -- "$SIM/current" "$SIM/candidate"; then
+                echo "SIM ROLLBACK: FAIL (cannot move current)" >&2
+                exit "$rc"
+            fi
+        fi
+
+        if mv -T -- "$SIM/previous" "$SIM/current"; then
+            echo "SIM ROLLBACK: PASS" >&2
+        else
+            echo "SIM ROLLBACK: FAIL (cannot restore previous)" >&2
+        fi
+    fi
+
+    exit "$rc"
+}
+
+trap rollback_on_exit EXIT
+
+mv -T -- "$SIM/current" "$SIM/previous"
+echo "SIM BACKUP: PASS"
+
+if [[ "${PICO_SIM_FAIL_AFTER_BACKUP:-0}" == "1" ]]; then
+    echo "SIM INJECTED FAILURE" >&2
+    false
+fi
+
+mv -T -- "$SIM/candidate" "$SIM/current"
+echo "SIM SWITCH: PASS"
+
+if [[ "${PICO_SIM_FAIL_AFTER_SWITCH:-0}" == "1" ]]; then
+    echo "SIM INJECTED FAILURE AFTER SWITCH" >&2
+    false
+fi
