@@ -393,7 +393,8 @@ PlasmoidItem {
                                     color: "#F2F4F7"
                                     font.pixelSize: 14
                                     font.weight: Font.Medium
-                                    wrapMode: Text.WordWrap
+                                    wrapMode: Text.NoWrap
+                                    elide: Text.ElideRight
                                 }
 
                                 Text {
@@ -416,7 +417,7 @@ PlasmoidItem {
 
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 80
+                        Layout.preferredHeight: 60
 
                         radius: 10
                         color: articleMouse2.containsMouse
@@ -452,8 +453,7 @@ PlasmoidItem {
                                     color: "#F2F4F7"
                                     font.pixelSize: 14
                                     font.weight: Font.Medium
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 2
+                                    wrapMode: Text.NoWrap
                                     elide: Text.ElideRight
                                 }
 
@@ -513,7 +513,8 @@ PlasmoidItem {
                                     color: "#F2F4F7"
                                     font.pixelSize: 14
                                     font.weight: Font.Medium
-                                    wrapMode: Text.WordWrap
+                                    wrapMode: Text.NoWrap
+                                    elide: Text.ElideRight
                                 }
 
                                 Text {
@@ -572,7 +573,8 @@ PlasmoidItem {
                                     color: "#F2F4F7"
                                     font.pixelSize: 14
                                     font.weight: Font.Medium
-                                    wrapMode: Text.WordWrap
+                                    wrapMode: Text.NoWrap
+                                    elide: Text.ElideRight
                                 }
 
                                 Text {
