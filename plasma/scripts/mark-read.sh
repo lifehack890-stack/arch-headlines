@@ -117,8 +117,10 @@ if not matching_items:
 read_links = set(state["read_links"])
 read_links.add(matching_items[0]["link"])
 
-for item in matching_items:
-    item["unread"] = False
+# state.json is authoritative. Reconcile all cached items so that a
+# previous interrupted two-file update is repaired on the next mark-read.
+for item in news["items"]:
+    item["unread"] = item["link"] not in read_links
 
 news["unread_count"] = sum(
     1 for item in news.get("items", [])
