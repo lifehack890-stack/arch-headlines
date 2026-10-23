@@ -23,7 +23,13 @@ cleanup() {
 trap cleanup EXIT
 
 # Network access stays outside the lock.
-curl -fsS --max-time 10 -o "$FEED_TMP" "$FEED_URL"
+# Reject excessive feed bodies before they reach the XML parser.
+MAX_FEED_BYTES=1048576
+curl -fsS --max-time 10 --max-filesize "$MAX_FEED_BYTES" -o "$FEED_TMP" "$FEED_URL"
+if (( $(stat -c %s -- "$FEED_TMP") > MAX_FEED_BYTES )); then
+    echo "arch-headlines: feed error: RSS exceeds size limit" >&2
+    exit 1
+fi
 
 exec 9>"$LOCK_FILE"
 flock -w 10 9 || { echo "arch-headlines: lock acquisition failed or timed out (10s)" >&2; exit 1; }
@@ -36,12 +42,22 @@ import sys
 import json
 import datetime
 import hashlib
+import re
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 
 feed_file, output_file, state_file, state_tmp = sys.argv[1:5]
 
 root = ET.parse(feed_file).getroot()
+channel = root.find("channel") if root.tag == "rss" else None
+if channel is None:
+    print("arch-headlines: feed error: expected RSS channel", file=sys.stderr)
+    sys.exit(1)
+
+feed_items = channel.findall("item")
+if not feed_items:
+    print("arch-headlines: feed error: no RSS items", file=sys.stderr)
+    sys.exit(1)
 
 ns = {
     "dc": "http://purl.org/dc/elements/1.1/"
@@ -49,11 +65,18 @@ ns = {
 
 items = []
 
-for item in root.findall(".//item")[:12]:
+for item in feed_items[:12]:
     title = item.findtext("title", "").strip()
     link = item.findtext("link", "").strip()
     pub = item.findtext("pubDate", "").strip()
     author = item.findtext("dc:creator", "", ns).strip()
+
+    # A broken item must not silently replace the last known-good feed.
+    if not title or not re.fullmatch(
+        r"https://archlinux\.org/news/[a-z0-9-]+/", link
+    ):
+        print("arch-headlines: feed error: invalid RSS item", file=sys.stderr)
+        sys.exit(1)
 
     date = ""
 
