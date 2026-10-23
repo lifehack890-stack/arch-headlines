@@ -163,11 +163,14 @@ if initialize_state:
         f.write("\n")
 PYEOF
 
-mv "$NEWS_TMP" "$OUTPUT_FILE"
-
+# Publish the authoritative read state first on initial startup.
+# If the following news.json rename fails, the next fetch can rebuild
+# news.json from state.json without losing the first-run read snapshot.
 if [ -s "$STATE_TMP" ]; then
     mv "$STATE_TMP" "$STATE_FILE"
 fi
+
+mv "$NEWS_TMP" "$OUTPUT_FILE"
 
 
 echo "wrote $OUTPUT_FILE"
