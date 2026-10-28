@@ -9,7 +9,7 @@
     ],
     "Category": "Utilities",
     "Description": "A lightweight Arch Linux news widget for KDE Plasma",
-    "Icon": "arch-headlines",
+    "Icon": "/ui/arch-headlines.svg",
     "Id": "org.archlinux.arch-headlines",
     "License": "MIT",
     "Name": "Arch Headlines",
